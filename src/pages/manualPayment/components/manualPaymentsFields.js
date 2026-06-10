@@ -56,6 +56,7 @@ const getSaveData = data => {
     payment_date: p.payment_date ? new Date(p.payment_date).toISOString(): null,    
     related_external_document: p.related_external_document,
     description: p.description,
+    attachment_url: p.attachment_url || null,
   })}
   )  
   return { document_id: data?.id, payments, total_amount:data?.total_amount }
@@ -142,6 +143,7 @@ function PaymentsFields({ detailData, ...props }) {
       payment_method: '',
       related_external_document: '',
       description: '',
+      attachment_url: '',
     },
   })
 
@@ -159,6 +161,7 @@ function PaymentsFields({ detailData, ...props }) {
       payment_method: '',
       related_external_document: '',
       description: '',
+      attachment_url: '',
     },
   })
 

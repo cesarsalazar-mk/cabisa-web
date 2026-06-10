@@ -13,16 +13,18 @@ import {
 import { DeleteOutlined } from '@ant-design/icons'
 import Tag from '../../../components/Tag'
 import CurrencyInput from '../../../components/CurrencyInput'
+import PaymentAttachmentUpload from '../../../components/PaymentAttachmentUpload'
 
 const { TextArea } = Input
 const { Option } = Select
 
 const getColConfig = forbidEdition => ({
-  paymentDate: forbidEdition ? 5 : 4,
+  paymentDate: 3,
   paymentAmount: 3,
-  paymentMethod: 4,
-  relatedExternalDocument: 4,
-  description: 8,
+  paymentMethod: 3,
+  relatedExternalDocument: 3,
+  description: forbidEdition ? 7 : 6,
+  attachment: 3,
   deleteButton: forbidEdition ? 0 : 1,
 })
 
@@ -60,6 +62,9 @@ function manualPaymentsList({
           </Col>
           <Col sm={colConfig.description}>
             <b className='center-flex-div'>Descripcion</b>
+          </Col>
+          <Col sm={colConfig.attachment}>
+            <b className='center-flex-div'>Adjunto</b>
           </Col>
           <Col sm={colConfig.deleteButton}></Col>
         </Row>
@@ -141,6 +146,15 @@ function manualPaymentsList({
                 value={row.description}
                 onChange={e =>
                   handleChangeManualPayments('description', e.target.value, index)
+                }
+                disabled={forbidEdition}
+              />
+            </Col>
+            <Col sm={colConfig.attachment}>
+              <PaymentAttachmentUpload
+                value={row.attachment_url}
+                onChange={value =>
+                  handleChangeManualPayments('attachment_url', value, index)
                 }
                 disabled={forbidEdition}
               />
