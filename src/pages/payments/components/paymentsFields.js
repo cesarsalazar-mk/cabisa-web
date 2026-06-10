@@ -58,6 +58,7 @@ const getSaveData = data => {
       : null,
     related_external_document: p.related_external_document,
     description: p.description,
+    attachment_url: p.attachment_url || null,
   }))
 
   return { document_id: data?.id, payments }
@@ -158,6 +159,7 @@ function PaymentsFields({ detailData, ...props }) {
       payment_method: '',
       related_external_document: '',
       description: '',
+      attachment_url: '',
     },
   })
 
