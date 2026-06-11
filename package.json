@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start": "REACT_APP_VERSION=$npm_package_version react-scripts start",
-    "build": "REACT_APP_VERSION=$npm_package_version react-scripts build",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
