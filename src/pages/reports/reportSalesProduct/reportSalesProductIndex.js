@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react'
 import HeaderPage from '../../../components/HeaderPage'
 import { withRouter } from 'react-router'
 import ReportSalesProductTable from './components/reportSalesProductTable'
@@ -22,7 +22,18 @@ const defaultPagination = {
   total: 0,
 }
 
+const CONTENT_PADDING_BOTTOM = 24
+
+function getAvailablePageHeight(pageTop) {
+  const footer = document.querySelector('.ant-layout-footer')
+  const footerHeight = footer?.getBoundingClientRect().height || 30
+
+  return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
+}
+
 function ReportSalesProduct(props) {
+  const pageRef = useRef(null)
+  const [pageHeight, setPageHeight] = useState(null)
   const initFilters = useRef()
 
   if (!initFilters.current) {
@@ -131,29 +142,69 @@ function ReportSalesProduct(props) {
       .finally(() => setLoading(false))
   }, [filters, pagination.current, pagination.pageSize])
 
+  useLayoutEffect(() => {
+    const updatePageHeight = () => {
+      if (!pageRef.current) return
+
+      const { top } = pageRef.current.getBoundingClientRect()
+      setPageHeight(getAvailablePageHeight(top))
+    }
+
+    updatePageHeight()
+    window.addEventListener('resize', updatePageHeight)
+
+    const frameId = requestAnimationFrame(updatePageHeight)
+
+    return () => {
+      window.removeEventListener('resize', updatePageHeight)
+      cancelAnimationFrame(frameId)
+    }
+  }, [loading, summary])
+
   useEffect(() => {
     loadData()
   }, [loadData])
 
   return (
-    <>
-      <HeaderPage
-        title={'Reporte - Productos/Servicios vendidos'}
-        titleButton={'Exportar'}
-        permissions={permissions.REPORTES}
-        showDrawer={exportDataAction}
-      />
-      <ReportSalesProductTable
-        dataSource={dataSource}
-        summary={summary}
-        handleFiltersChange={setSearchFilters}
-        loading={loading}
-        productTypeFilter={filters.product_type}
-        pagination={pagination}
-        onPaginationChange={handlePaginationChange}
-        isAdmin={true}
-      />
-    </>
+    <div
+      ref={pageRef}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: pageHeight ?? undefined,
+        maxHeight: pageHeight ?? undefined,
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ flexShrink: 0 }}>
+        <HeaderPage
+          title={'Reporte - Productos/Servicios vendidos'}
+          titleButton={'Exportar'}
+          permissions={permissions.REPORTES}
+          showDrawer={exportDataAction}
+        />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <ReportSalesProductTable
+          dataSource={dataSource}
+          summary={summary}
+          handleFiltersChange={setSearchFilters}
+          loading={loading}
+          productTypeFilter={filters.product_type}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+          isAdmin={true}
+        />
+      </div>
+    </div>
   )
 }
 

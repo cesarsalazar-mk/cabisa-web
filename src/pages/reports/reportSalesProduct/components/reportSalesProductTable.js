@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import {
   Card,
   Col,
   DatePicker,
   Input,
+  Pagination,
   Row,
   Select,
   Table,
@@ -57,6 +58,54 @@ const formatTopItemLabel = item =>
 
 const cardColStyle = { display: 'flex' }
 
+const staticSectionStyle = { flexShrink: 0 }
+
+const pageLayoutStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
+}
+
+const tableSectionStyle = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  marginTop: 15,
+  overflow: 'hidden',
+}
+
+const tableCardStyle = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}
+
+const tableCardBodyStyle = {
+  flex: 1,
+  minHeight: 0,
+  padding: '12px 24px',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}
+
+const tableWrapperStyle = {
+  flex: 1,
+  minHeight: 0,
+  overflow: 'hidden',
+}
+
+const tablePaginationStyle = {
+  flexShrink: 0,
+  marginTop: 12,
+  textAlign: 'right',
+}
+
 function SummaryCard({ title, label, quantity, amount }) {
   return (
     <Card
@@ -80,6 +129,56 @@ function SummaryCard({ title, label, quantity, amount }) {
 }
 
 function ReportSalesProductTable(props) {
+  const tableSectionRef = useRef(null)
+  const tableWrapperRef = useRef(null)
+  const [tableScrollY, setTableScrollY] = useState(200)
+
+  useLayoutEffect(() => {
+    const updateTableHeight = () => {
+      if (!tableSectionRef.current || !tableWrapperRef.current) return
+
+      const wrapperHeight = tableWrapperRef.current.clientHeight
+      const tableHead =
+        tableSectionRef.current.querySelector('.ant-table-thead') ||
+        tableSectionRef.current.querySelector('.ant-table-header')
+      const headHeight = tableHead?.getBoundingClientRect().height || 0
+      const scrollHeight = wrapperHeight - headHeight - 4
+
+      setTableScrollY(Math.max(scrollHeight, 80))
+    }
+
+    const scheduleUpdate = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(updateTableHeight)
+      })
+    }
+
+    scheduleUpdate()
+    window.addEventListener('resize', scheduleUpdate)
+
+    let resizeObserver
+    const sectionEl = tableSectionRef.current
+    const wrapperEl = tableWrapperRef.current
+
+    if (window.ResizeObserver && sectionEl) {
+      resizeObserver = new ResizeObserver(scheduleUpdate)
+      resizeObserver.observe(sectionEl)
+      if (wrapperEl) resizeObserver.observe(wrapperEl)
+    }
+
+    return () => {
+      window.removeEventListener('resize', scheduleUpdate)
+      resizeObserver?.disconnect()
+    }
+  }, [
+    props.loading,
+    props.dataSource?.length,
+    props.pagination?.pageSize,
+    props.pagination?.current,
+    props.summary,
+    props.productTypeFilter,
+  ])
+
   const itemLabel =
     props.productTypeFilter === productsTypes.SERVICE
       ? 'servicio'
@@ -144,8 +243,9 @@ function ReportSalesProductTable(props) {
   const topService = summary?.top_service
 
   return (
-    <>
-      <Row gutter={[16, 16]} align='stretch'>
+    <div style={pageLayoutStyle}>
+      <div style={staticSectionStyle}>
+        <Row gutter={[16, 16]} align='stretch'>
         <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
           <SummaryCard
             title='Producto mas vendido'
@@ -177,8 +277,10 @@ function ReportSalesProductTable(props) {
           />
         </Col>
       </Row>
+      </div>
 
-      <Row gutter={16} className={'margin-top-15'}>
+      <div style={staticSectionStyle}>
+        <Row gutter={16} className={'margin-top-15'}>
         <Col xs={24} sm={12} md={6} lg={6}>
           <Search
             prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
@@ -226,35 +328,38 @@ function ReportSalesProductTable(props) {
           </Select>
         </Col>
       </Row>
+      </div>
 
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Card className={'card-border-radius margin-top-15'}>
-            <Row>
-              <Col xs={24} sm={24} md={24} lg={24}>
-                <Table
-                  scroll={{ y: 820 }}
-                  className={'CustomTableClass'}
-                  dataSource={props.dataSource}
-                  columns={columns}
-                  pagination={{
-                    current: props.pagination?.current,
-                    pageSize: props.pagination?.pageSize,
-                    total: props.pagination?.total,
-                    showSizeChanger: true,
-                    pageSizeOptions: ['5', '10', '20', '50'],
-                    onChange: props.onPaginationChange,
-                    onShowSizeChange: props.onPaginationChange,
-                  }}
-                  loading={props.loading}
-                  rowKey='id'
-                />
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
-    </>
+      <div ref={tableSectionRef} style={tableSectionStyle}>
+        <Card
+          className={'card-border-radius'}
+          style={tableCardStyle}
+          bodyStyle={tableCardBodyStyle}
+        >
+          <div ref={tableWrapperRef} style={tableWrapperStyle}>
+            <Table
+              scroll={{ y: tableScrollY }}
+              className={'CustomTableClass'}
+              dataSource={props.dataSource}
+              columns={columns}
+              pagination={false}
+              loading={props.loading}
+              rowKey='id'
+            />
+          </div>
+          <Pagination
+            style={tablePaginationStyle}
+            current={props.pagination?.current}
+            pageSize={props.pagination?.pageSize}
+            total={props.pagination?.total}
+            showSizeChanger
+            pageSizeOptions={['5', '10', '20', '50']}
+            onChange={props.onPaginationChange}
+            onShowSizeChange={props.onPaginationChange}
+          />
+        </Card>
+      </div>
+    </div>
   )
 }
 
