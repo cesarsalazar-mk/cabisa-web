@@ -1,8 +1,14 @@
-import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+} from 'react'
 import HeaderPage from '../../../components/HeaderPage'
 import { withRouter } from 'react-router'
 import ReportSalesProductTable from './components/reportSalesProductTable'
-import { permissions } from '../../../commons/types'
+import { permissions, reportSalesItemTypes } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
 import { message } from 'antd'
 import moment from 'moment'
@@ -10,10 +16,13 @@ import moment from 'moment'
 const emptySummary = {
   top_product: null,
   top_service: null,
+  top_equipment: null,
   products_total_quantity: 0,
   services_total_quantity: 0,
+  equipment_total_quantity: 0,
   products_total_amount: 0,
   services_total_amount: 0,
+  equipment_total_amount: 0,
 }
 
 const defaultPagination = {
@@ -41,7 +50,8 @@ function ReportSalesProduct(props) {
       code: '',
       description: '',
       created_at: '',
-      product_type: '',
+      item_type: '',
+      sales_category: '',
     }
   }
 
@@ -72,7 +82,8 @@ function ReportSalesProduct(props) {
     code: { $like: `%25${filters.code}%25` },
     description: { $like: `%25${filters.description}%25` },
     ...getDateRangeFilterReport(filters.created_at),
-    ...(filters.product_type ? { product_type: filters.product_type } : {}),
+    ...(filters.item_type ? { item_type: filters.item_type } : {}),
+    ...(filters.sales_category ? { sales_category: filters.sales_category } : {}),
     ...(withPagination
       ? {
           $limit: pageSize,
@@ -178,7 +189,7 @@ function ReportSalesProduct(props) {
     >
       <div style={{ flexShrink: 0 }}>
         <HeaderPage
-          title={'Reporte - Productos/Servicios vendidos'}
+          title={'Reporte - Ventas'}
           titleButton={'Exportar'}
           permissions={permissions.REPORTES}
           showDrawer={exportDataAction}
@@ -198,7 +209,7 @@ function ReportSalesProduct(props) {
           summary={summary}
           handleFiltersChange={setSearchFilters}
           loading={loading}
-          productTypeFilter={filters.product_type}
+          itemTypeFilter={filters.item_type}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
           isAdmin={true}

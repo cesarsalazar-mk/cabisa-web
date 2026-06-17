@@ -56,11 +56,31 @@ export const productsCategories = {
   PART: 'PART',
 }
 
+export const salesCategories = {
+  SC: 'sc',
+  SE: 'se',
+  SF: 'sf',
+  SO: 'so',
+}
+
+export const salesCategoryOptions = [
+  { value: 'sc', label: 'Cabina' },
+  { value: 'se', label: 'Equipo' },
+  { value: 'sf', label: 'Fosa' },
+  { value: 'so', label: 'Otros' },
+]
+
 // also apply to serviceStatus
 export const productsStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE',
   BLOCKED: 'BLOCKED',
+}
+
+export const reportSalesItemTypes = {
+  PRODUCT: 'PRODUCT',
+  SERVICE: 'SERVICE',
+  EQUIPMENT: 'EQUIPMENT',
 }
 
 export const productsTypes = {

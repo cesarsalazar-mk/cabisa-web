@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import InventoryTable from '../../components/inventoryTable'
+import ProductsTable from './productsTable'
 import ProductDrawer from './productDrawer'
 import { withRouter } from 'react-router'
 import Tag from '../../../../components/Tag'
@@ -15,44 +15,44 @@ function InventoryProduct(props) {
 
   const columns = [
     {
-      width:120,
+      width: 120,
       title: 'Codigo',
-      dataIndex: 'code', // Field that is goint to be rendered
+      dataIndex: 'code',
       key: 'code',
       render: text => <span>{text}</span>,
     },
     {
-      width:120,
+      width: 120,
       title: '# Serie',
-      dataIndex: 'serial_number', // Field that is goint to be rendered
+      dataIndex: 'serial_number',
       key: 'serial_number',
       render: text => <span>{text}</span>,
     },
     {
-      width:350,
+      width: 350,
       title: 'Descripcion',
-      dataIndex: 'description', // Field that is goint to be rendered
+      dataIndex: 'description',
       key: 'description',
       render: text => <span>{text}</span>,
     },
     {
-      width:120,
+      width: 120,
       title: 'Categoria',
-      dataIndex: 'product_category', // Field that is goint to be rendered
+      dataIndex: 'product_category',
       key: 'product_category',
       render: text => <Tag type='productCategories' value={text} />,
     },
     {
-      width:120,
+      width: 120,
       title: 'Estado',
-      dataIndex: 'status', // Field that is goint to be rendered
+      dataIndex: 'status',
       key: 'status',
       render: text => <Tag type='productStatus' value={text} />,
     },
     {
-      width:120,
+      width: 120,
       title: '',
-      dataIndex: 'id', // Field that is goint to be rendered
+      dataIndex: 'id',
       key: 'id',
       render: (_, data) => (
         <ActionOptions
@@ -70,39 +70,23 @@ function InventoryProduct(props) {
   const isAdmin = validateRole(roles.ADMIN)
 
   const loadData = useCallback(() => {
-    setDataSource(getClientData(props.dataSource))
+    setDataSource(props.dataSource || [])
   }, [props.dataSource])
 
   useEffect(() => {
     loadData()
-
     return () => setIsVisible(false)
   }, [loadData])
-
-  const getClientData = data => {
-    const _data = []
-    for (let k in data) {
-      const d = data[k]
-      _data.push(d)
-    }
-    return _data
-  }
 
   const showDrawer = () => props.history.push('/inventoryProductsView')
 
   const onClose = () => setIsVisible(false)
 
-  const searchTextFinder = data => props.searchByTxt(data)
-  
-  const searchTextCodeFinder = data => props.searchByTxtCode(data)
-
-  const searchByCategory = data => props.searchByCategory(data)
-
   const onCloseAfterSaveWarehouse = () => {
     setIsVisible(false)
     props.closeAfterSaveWareHouse()
   }
-  //START: table handler
+
   const EditRow = data => {
     setEditDataDrawer(data)
     setIsVisible(true)
@@ -110,21 +94,21 @@ function InventoryProduct(props) {
   }
 
   const DeleteRow = data => props.deleteItemWareHouse({ id: data.id })
-  //END: table handler
 
   return (
     <>
-      <InventoryTable
-        warehouse={false}
-        showDraweTbl={showDrawer}
+      <ProductsTable
         dataSource={dataSource}
-        loading={props.loading}
-        handlerTextSearch={searchTextFinder}
-        handlerTextSearchCode={searchTextCodeFinder}
-        handlerCategorySearch={searchByCategory}
         columns={columns}
+        loading={props.loading}
+        pagination={props.pagination}
+        onPaginationChange={props.onPaginationChange}
+        onSearchDescription={props.searchByTxt}
+        onSearchCode={props.searchByTxtCode}
+        onSearchCategory={props.searchByCategory}
+        categoryFilter={props.categoryFilter}
         productCategoriesList={props.productCategoriesList}
-        isAdmin={isAdmin}
+        onCreate={showDrawer}
       />
 
       <ProductDrawer
@@ -143,4 +127,5 @@ function InventoryProduct(props) {
     </>
   )
 }
+
 export default withRouter(InventoryProduct)

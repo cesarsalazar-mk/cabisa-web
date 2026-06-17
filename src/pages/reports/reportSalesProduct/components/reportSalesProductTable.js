@@ -11,18 +11,28 @@ import {
   Tag as AntTag,
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
+import Tag from '../../../../components/Tag'
 import { numberFormat } from '../../../../utils'
-import { productsTypes } from '../../../../commons/types'
+import { reportSalesItemTypes, salesCategoryOptions } from '../../../../commons/types'
 
 const { Search } = Input
 const { Option } = Select
 const { RangePicker } = DatePicker
 const { getFormattedValue } = numberFormat()
 
-const productTypeLabels = {
-  [productsTypes.PRODUCT]: 'Producto',
-  [productsTypes.SERVICE]: 'Servicio',
+const itemTypeLabels = {
+  [reportSalesItemTypes.PRODUCT]: 'Producto',
+  [reportSalesItemTypes.SERVICE]: 'Servicio',
+  [reportSalesItemTypes.EQUIPMENT]: 'Equipo',
 }
+
+const itemTypeColors = {
+  [reportSalesItemTypes.PRODUCT]: '#87d067',
+  [reportSalesItemTypes.SERVICE]: '#187fce',
+  [reportSalesItemTypes.EQUIPMENT]: '#fa8c16',
+}
+
+const summaryCardCol = { xs: 24, sm: 12, md: 8, lg: 8 }
 
 const cardTitleStyle = {
   fontSize: 12,
@@ -176,35 +186,35 @@ function ReportSalesProductTable(props) {
     props.pagination?.pageSize,
     props.pagination?.current,
     props.summary,
-    props.productTypeFilter,
+    props.itemTypeFilter,
   ])
 
-  const itemLabel =
-    props.productTypeFilter === productsTypes.SERVICE
-      ? 'servicio'
-      : props.productTypeFilter === productsTypes.PRODUCT
-      ? 'producto'
-      : ''
+  const itemLabelMap = {
+    [reportSalesItemTypes.PRODUCT]: 'producto',
+    [reportSalesItemTypes.SERVICE]: 'servicio',
+    [reportSalesItemTypes.EQUIPMENT]: 'equipo',
+  }
 
+  const itemsLabelMap = {
+    [reportSalesItemTypes.PRODUCT]: 'productos',
+    [reportSalesItemTypes.SERVICE]: 'servicios',
+    [reportSalesItemTypes.EQUIPMENT]: 'equipos',
+  }
+
+  const itemLabel = itemLabelMap[props.itemTypeFilter] || ''
   const itemsLabel =
-    props.productTypeFilter === productsTypes.SERVICE
-      ? 'servicios'
-      : props.productTypeFilter === productsTypes.PRODUCT
-      ? 'productos'
-      : 'productos/servicios'
+    itemsLabelMap[props.itemTypeFilter] || 'productos/servicios/equipos'
 
   const columns = [
-    ...(!props.productTypeFilter
+    ...(!props.itemTypeFilter
       ? [
           {
             title: 'Tipo',
-            dataIndex: 'product_type',
-            key: 'product_type',
+            dataIndex: 'item_type',
+            key: 'item_type',
             render: text => (
-              <AntTag
-                color={text === productsTypes.SERVICE ? '#187fce' : '#87d067'}
-              >
-                {productTypeLabels[text] || text}
+              <AntTag color={itemTypeColors[text] || 'gray'}>
+                {itemTypeLabels[text] || text}
               </AntTag>
             ),
           },
@@ -221,6 +231,13 @@ function ReportSalesProductTable(props) {
       dataIndex: 'description',
       key: 'description',
       render: text => <span>{text}</span>,
+    },
+    {
+      title: 'Categoria',
+      dataIndex: 'sales_category',
+      key: 'sales_category',
+      render: text =>
+        text ? <Tag type='salesCategories' value={text} /> : <span>-</span>,
     },
     {
       title: `Cantidad de ${itemsLabel} vendidos`,
@@ -241,12 +258,13 @@ function ReportSalesProductTable(props) {
   const { summary } = props
   const topProduct = summary?.top_product
   const topService = summary?.top_service
+  const topEquipment = summary?.top_equipment
 
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
         <Row gutter={[16, 16]} align='stretch'>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Producto mas vendido'
             label={formatTopItemLabel(topProduct)}
@@ -254,7 +272,7 @@ function ReportSalesProductTable(props) {
             amount={topProduct?.total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Servicio mas vendido'
             label={formatTopItemLabel(topService)}
@@ -262,18 +280,33 @@ function ReportSalesProductTable(props) {
             amount={topService?.total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
+          <SummaryCard
+            title='Equipo mas vendido'
+            label={formatTopItemLabel(topEquipment)}
+            quantity={topEquipment?.product_quantity}
+            amount={topEquipment?.total_amount}
+          />
+        </Col>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Total vendido en productos'
             quantity={summary?.products_total_quantity}
             amount={summary?.products_total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Total vendido en servicios'
             quantity={summary?.services_total_quantity}
             amount={summary?.services_total_amount}
+          />
+        </Col>
+        <Col {...summaryCardCol} style={cardColStyle}>
+          <SummaryCard
+            title='Total vendido en equipos'
+            quantity={summary?.equipment_total_quantity}
+            amount={summary?.equipment_total_amount}
           />
         </Col>
       </Row>
@@ -281,7 +314,7 @@ function ReportSalesProductTable(props) {
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Search
             prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
             placeholder={`Codigo ${itemLabel || ''}`}
@@ -290,7 +323,7 @@ function ReportSalesProductTable(props) {
             onSearch={props.handleFiltersChange('code')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Search
             prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
             placeholder='Nombre / Descripcion'
@@ -299,32 +332,56 @@ function ReportSalesProductTable(props) {
             onSearch={props.handleFiltersChange('description')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <RangePicker
             style={{ width: '100%', height: '40px', borderRadius: '6px' }}
             format='DD-MM-YYYY'
             onChange={props.handleFiltersChange('created_at')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Select
             className={'single-select'}
             placeholder={'Tipo de item'}
             size={'large'}
             style={{ width: '100%', height: '40px' }}
             getPopupContainer={trigger => trigger.parentNode}
-            onChange={props.handleFiltersChange('product_type')}
+            onChange={props.handleFiltersChange('item_type')}
             defaultValue=''
           >
             <Option value={''}>
               <AntTag color='gray'>Todos</AntTag>
             </Option>
-            <Option value={productsTypes.PRODUCT}>
+            <Option value={reportSalesItemTypes.PRODUCT}>
               <AntTag color='#87d067'>Producto</AntTag>
             </Option>
-            <Option value={productsTypes.SERVICE}>
+            <Option value={reportSalesItemTypes.SERVICE}>
               <AntTag color='#187fce'>Servicio</AntTag>
             </Option>
+            <Option value={reportSalesItemTypes.EQUIPMENT}>
+              <AntTag color='#fa8c16'>Equipo</AntTag>
+            </Option>
+          </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={4}>
+          <Select
+            allowClear
+            className={'single-select'}
+            placeholder={'Categoria'}
+            size={'large'}
+            style={{ width: '100%', height: '40px' }}
+            getPopupContainer={trigger => trigger.parentNode}
+            onChange={props.handleFiltersChange('sales_category')}
+            defaultValue=''
+          >
+            <Option value={''}>
+              <AntTag color='gray'>Todas</AntTag>
+            </Option>
+            {salesCategoryOptions.map(option => (
+              <Option key={option.value} value={option.value}>
+                <Tag type='salesCategories' value={option.value} />
+              </Option>
+            ))}
           </Select>
         </Col>
       </Row>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import FooterButtons from '../../../../components/FooterButtons'
 import { Col, Divider, Input, message, Row, Select, Typography } from 'antd'
 import Tag from '../../../../components/Tag'
-import { productsStatus } from '../../../../commons/types'
+import { productsStatus, salesCategoryOptions } from '../../../../commons/types'
 const { Title } = Typography
 const { Option } = Select
 
@@ -10,11 +10,13 @@ function ServiceFields(props) {
   const [code, setCode] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState(1)
+  const [salesCategory, setSalesCategory] = useState(null)
 
   useEffect(() => {
     setCode(props.edit ? props.editData.code : '')
     setDescription(props.edit ? props.editData.description : '')
     setStatus(props.edit ? props.editData.status : productsStatus.ACTIVE)
+    setSalesCategory(props.edit ? props.editData.sales_category : null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.visible])
 
@@ -32,6 +34,7 @@ function ServiceFields(props) {
       code,
       description,
       status,
+      sales_category: salesCategory || null,
     }
 
     props.saveUserData(data)
@@ -68,6 +71,25 @@ function ServiceFields(props) {
           </Col>
         </Row>
         <Row gutter={16} className={'section-space-field'}>
+          <Col xs={8} sm={8} md={8} lg={8}>
+            <div className={'title-space-field'}>Categoria</div>
+            <Select
+              allowClear
+              value={salesCategory}
+              className={'single-select'}
+              placeholder={'Categoria'}
+              size={'large'}
+              style={{ width: '100%', height: '40px' }}
+              getPopupContainer={trigger => trigger.parentNode}
+              onChange={value => setSalesCategory(value || null)}
+            >
+              {salesCategoryOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  <Tag type='salesCategories' value={option.value} />
+                </Option>
+              ))}
+            </Select>
+          </Col>
           <Col xs={8} sm={8} md={8} lg={8}>
             <div className={'title-space-field'}>Estado</div>
             <Select
