@@ -12,17 +12,26 @@ import {
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import { numberFormat } from '../../../../utils'
-import { productsTypes } from '../../../../commons/types'
+import { reportSalesItemTypes } from '../../../../commons/types'
 
 const { Search } = Input
 const { Option } = Select
 const { RangePicker } = DatePicker
 const { getFormattedValue } = numberFormat()
 
-const productTypeLabels = {
-  [productsTypes.PRODUCT]: 'Producto',
-  [productsTypes.SERVICE]: 'Servicio',
+const itemTypeLabels = {
+  [reportSalesItemTypes.PRODUCT]: 'Producto',
+  [reportSalesItemTypes.SERVICE]: 'Servicio',
+  [reportSalesItemTypes.EQUIPMENT]: 'Equipo',
 }
+
+const itemTypeColors = {
+  [reportSalesItemTypes.PRODUCT]: '#87d067',
+  [reportSalesItemTypes.SERVICE]: '#187fce',
+  [reportSalesItemTypes.EQUIPMENT]: '#fa8c16',
+}
+
+const summaryCardCol = { xs: 24, sm: 12, md: 8, lg: 8 }
 
 const cardTitleStyle = {
   fontSize: 12,
@@ -176,35 +185,35 @@ function ReportSalesProductTable(props) {
     props.pagination?.pageSize,
     props.pagination?.current,
     props.summary,
-    props.productTypeFilter,
+    props.itemTypeFilter,
   ])
 
-  const itemLabel =
-    props.productTypeFilter === productsTypes.SERVICE
-      ? 'servicio'
-      : props.productTypeFilter === productsTypes.PRODUCT
-      ? 'producto'
-      : ''
+  const itemLabelMap = {
+    [reportSalesItemTypes.PRODUCT]: 'producto',
+    [reportSalesItemTypes.SERVICE]: 'servicio',
+    [reportSalesItemTypes.EQUIPMENT]: 'equipo',
+  }
 
+  const itemsLabelMap = {
+    [reportSalesItemTypes.PRODUCT]: 'productos',
+    [reportSalesItemTypes.SERVICE]: 'servicios',
+    [reportSalesItemTypes.EQUIPMENT]: 'equipos',
+  }
+
+  const itemLabel = itemLabelMap[props.itemTypeFilter] || ''
   const itemsLabel =
-    props.productTypeFilter === productsTypes.SERVICE
-      ? 'servicios'
-      : props.productTypeFilter === productsTypes.PRODUCT
-      ? 'productos'
-      : 'productos/servicios'
+    itemsLabelMap[props.itemTypeFilter] || 'productos/servicios/equipos'
 
   const columns = [
-    ...(!props.productTypeFilter
+    ...(!props.itemTypeFilter
       ? [
           {
             title: 'Tipo',
-            dataIndex: 'product_type',
-            key: 'product_type',
+            dataIndex: 'item_type',
+            key: 'item_type',
             render: text => (
-              <AntTag
-                color={text === productsTypes.SERVICE ? '#187fce' : '#87d067'}
-              >
-                {productTypeLabels[text] || text}
+              <AntTag color={itemTypeColors[text] || 'gray'}>
+                {itemTypeLabels[text] || text}
               </AntTag>
             ),
           },
@@ -241,12 +250,13 @@ function ReportSalesProductTable(props) {
   const { summary } = props
   const topProduct = summary?.top_product
   const topService = summary?.top_service
+  const topEquipment = summary?.top_equipment
 
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
         <Row gutter={[16, 16]} align='stretch'>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Producto mas vendido'
             label={formatTopItemLabel(topProduct)}
@@ -254,7 +264,7 @@ function ReportSalesProductTable(props) {
             amount={topProduct?.total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Servicio mas vendido'
             label={formatTopItemLabel(topService)}
@@ -262,18 +272,33 @@ function ReportSalesProductTable(props) {
             amount={topService?.total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
+          <SummaryCard
+            title='Equipo mas vendido'
+            label={formatTopItemLabel(topEquipment)}
+            quantity={topEquipment?.product_quantity}
+            amount={topEquipment?.total_amount}
+          />
+        </Col>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Total vendido en productos'
             quantity={summary?.products_total_quantity}
             amount={summary?.products_total_amount}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6} style={cardColStyle}>
+        <Col {...summaryCardCol} style={cardColStyle}>
           <SummaryCard
             title='Total vendido en servicios'
             quantity={summary?.services_total_quantity}
             amount={summary?.services_total_amount}
+          />
+        </Col>
+        <Col {...summaryCardCol} style={cardColStyle}>
+          <SummaryCard
+            title='Total vendido en equipos'
+            quantity={summary?.equipment_total_quantity}
+            amount={summary?.equipment_total_amount}
           />
         </Col>
       </Row>
@@ -313,17 +338,20 @@ function ReportSalesProductTable(props) {
             size={'large'}
             style={{ width: '100%', height: '40px' }}
             getPopupContainer={trigger => trigger.parentNode}
-            onChange={props.handleFiltersChange('product_type')}
+            onChange={props.handleFiltersChange('item_type')}
             defaultValue=''
           >
             <Option value={''}>
               <AntTag color='gray'>Todos</AntTag>
             </Option>
-            <Option value={productsTypes.PRODUCT}>
+            <Option value={reportSalesItemTypes.PRODUCT}>
               <AntTag color='#87d067'>Producto</AntTag>
             </Option>
-            <Option value={productsTypes.SERVICE}>
+            <Option value={reportSalesItemTypes.SERVICE}>
               <AntTag color='#187fce'>Servicio</AntTag>
+            </Option>
+            <Option value={reportSalesItemTypes.EQUIPMENT}>
+              <AntTag color='#fa8c16'>Equipo</AntTag>
             </Option>
           </Select>
         </Col>

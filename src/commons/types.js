@@ -63,6 +63,12 @@ export const productsStatus = {
   BLOCKED: 'BLOCKED',
 }
 
+export const reportSalesItemTypes = {
+  PRODUCT: 'PRODUCT',
+  SERVICE: 'SERVICE',
+  EQUIPMENT: 'EQUIPMENT',
+}
+
 export const productsTypes = {
   SERVICE: 'SERVICE',
   PRODUCT: 'PRODUCT',
