@@ -197,7 +197,7 @@ function Billing(props) {
   
     billingSrc
       .getInvoices(filterParams)
-      .then(data =>setDataSource(data.filter(item => item.document_number === null)))
+      .then(data => setDataSource((data.items || data).filter(item => item.document_number === null)))
       .catch(_ => message.error('Error al cargar facturas'))
       .finally(() => setLoading(false))
   }, [filters])

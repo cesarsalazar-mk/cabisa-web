@@ -227,7 +227,7 @@ function BillingManagementIndex(props) {
         payment_method: filtersFel.paymentMethods,
         total_amount: { $like: `%25${filtersFel.totalInvoice}%25` },
       })
-      .then(data => setDataSourceFel(data))
+      .then(data => setDataSourceFel(data.items || data))
       .catch(_ => message.error('Error al cargar facturas'))
       .finally(() => setLoadingBill(false))
   }, [filtersFel])
