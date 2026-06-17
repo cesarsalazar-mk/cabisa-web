@@ -4,7 +4,7 @@ import '../../../../amplify_config'
 import {
   productsStatus,
   productsCategories,
-  // productsTaxes,
+  salesCategoryOptions,
 } from '../../../../commons/types'
 import FooterButtons from '../../../../components/FooterButtons'
 import Tag from '../../../../components/Tag'
@@ -28,7 +28,8 @@ function ProductFields(props) {
   const [code, setCode] = useState('')
   const [serie, setSerie] = useState('')
   const [description, setDescription] = useState('')
-  const [serviceCategory, setServiceCategory] = useState(null)
+  const [inventoryCategory, setInventoryCategory] = useState(null)
+  const [salesCategory, setSalesCategory] = useState(null)
   const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState(null)
   const [status, setStatus] = useState(null)
@@ -43,11 +44,12 @@ function ProductFields(props) {
     setCode(props.edit ? props.editData.code : '')
     setSerie(props.edit ? props.editData.serial_number : '')
     setDescription(props.edit ? props.editData.description : '')
-    setServiceCategory(
+    setInventoryCategory(
       props.edit
         ? props.editData.product_category
         : productsCategories.EQUIPMENT
     )
+    setSalesCategory(props.edit ? props.editData.sales_category : null)
     setStatus(props.edit ? props.editData.status : productsStatus.ACTIVE)
     // setTaxId(props.edit ? props.editData.tax_id : productsTaxes.IVA)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,7 +69,8 @@ function ProductFields(props) {
       code,
       serial_number: serie,
       description,
-      product_category: serviceCategory,
+      product_category: inventoryCategory,
+      sales_category: salesCategory || null,
       status,
       tax_id: 2, //taxId,
       image_url: imageUrl,
@@ -182,19 +185,38 @@ function ProductFields(props) {
             />
           </Col>
           <Col xs={8} sm={8} md={8} lg={8}>
-            <div className={'title-space-field'}>Categoria</div>
+            <div className={'title-space-field'}>Tipo de inventario</div>
             <Select
-              value={serviceCategory}
+              value={inventoryCategory}
               className={'single-select'}
-              placeholder={'Tipo de servicio'}
+              placeholder={'Tipo de inventario'}
               size={'large'}
               style={{ width: '100%', height: '40px' }}
               getPopupContainer={trigger => trigger.parentNode}
-              onChange={value => setServiceCategory(value)}
+              onChange={value => setInventoryCategory(value)}
             >
               {props.productCategoriesList?.map(value => (
                 <Option key={value} value={value}>
                   <Tag type='productCategories' value={value} />
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={8} sm={8} md={8} lg={8}>
+            <div className={'title-space-field'}>Categoria</div>
+            <Select
+              allowClear
+              value={salesCategory}
+              className={'single-select'}
+              placeholder={'Categoria'}
+              size={'large'}
+              style={{ width: '100%', height: '40px' }}
+              getPopupContainer={trigger => trigger.parentNode}
+              onChange={value => setSalesCategory(value || null)}
+            >
+              {salesCategoryOptions.map(option => (
+                <Option key={option.value} value={option.value}>
+                  <Tag type='salesCategories' value={option.value} />
                 </Option>
               ))}
             </Select>

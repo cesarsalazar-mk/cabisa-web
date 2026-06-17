@@ -11,8 +11,9 @@ import {
   Tag as AntTag,
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
+import Tag from '../../../../components/Tag'
 import { numberFormat } from '../../../../utils'
-import { reportSalesItemTypes } from '../../../../commons/types'
+import { reportSalesItemTypes, salesCategoryOptions } from '../../../../commons/types'
 
 const { Search } = Input
 const { Option } = Select
@@ -232,6 +233,13 @@ function ReportSalesProductTable(props) {
       render: text => <span>{text}</span>,
     },
     {
+      title: 'Categoria',
+      dataIndex: 'sales_category',
+      key: 'sales_category',
+      render: text =>
+        text ? <Tag type='salesCategories' value={text} /> : <span>-</span>,
+    },
+    {
       title: `Cantidad de ${itemsLabel} vendidos`,
       dataIndex: 'product_quantity',
       key: 'product_quantity',
@@ -306,7 +314,7 @@ function ReportSalesProductTable(props) {
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Search
             prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
             placeholder={`Codigo ${itemLabel || ''}`}
@@ -315,7 +323,7 @@ function ReportSalesProductTable(props) {
             onSearch={props.handleFiltersChange('code')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Search
             prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
             placeholder='Nombre / Descripcion'
@@ -324,14 +332,14 @@ function ReportSalesProductTable(props) {
             onSearch={props.handleFiltersChange('description')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <RangePicker
             style={{ width: '100%', height: '40px', borderRadius: '6px' }}
             format='DD-MM-YYYY'
             onChange={props.handleFiltersChange('created_at')}
           />
         </Col>
-        <Col xs={24} sm={12} md={6} lg={6}>
+        <Col xs={24} sm={12} md={8} lg={4}>
           <Select
             className={'single-select'}
             placeholder={'Tipo de item'}
@@ -353,6 +361,27 @@ function ReportSalesProductTable(props) {
             <Option value={reportSalesItemTypes.EQUIPMENT}>
               <AntTag color='#fa8c16'>Equipo</AntTag>
             </Option>
+          </Select>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={4}>
+          <Select
+            allowClear
+            className={'single-select'}
+            placeholder={'Categoria'}
+            size={'large'}
+            style={{ width: '100%', height: '40px' }}
+            getPopupContainer={trigger => trigger.parentNode}
+            onChange={props.handleFiltersChange('sales_category')}
+            defaultValue=''
+          >
+            <Option value={''}>
+              <AntTag color='gray'>Todas</AntTag>
+            </Option>
+            {salesCategoryOptions.map(option => (
+              <Option key={option.value} value={option.value}>
+                <Tag type='salesCategories' value={option.value} />
+              </Option>
+            ))}
           </Select>
         </Col>
       </Row>

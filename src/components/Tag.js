@@ -9,7 +9,7 @@ const config = {
   },
   creditStatusManual: {
     UNPAID: { color: 'cyan', text: 'Pago Pendiente' },
-    PAID: { color: '#87d068', text: 'Pagado' },    
+    PAID: { color: '#87d068', text: 'Pagado' },
   },
   documentsServiceType: {
     PART: { color: 'geekblue', text: 'Repuesto' },
@@ -55,6 +55,12 @@ const config = {
     EQUIPMENT: { color: 'blue', text: 'Equipo' },
     PART: { color: 'orange', text: 'Repuesto' },
   },
+  salesCategories: {
+    sc: { color: 'purple', text: 'SC - Cabina' },
+    se: { color: 'blue', text: 'SE - Equipo' },
+    sf: { color: 'cyan', text: 'SF - Fosa' },
+    so: { color: 'gray', text: 'SO - Otros' },
+  },
   roles: {
     ADMIN: { color: '#187fce', text: 'Administrador' },
     SELLS: { color: '#87d067', text: 'Vendedor' },
@@ -68,7 +74,7 @@ const config = {
   },
   creditDebitNote: {
     CREDITO: { color: 'geekblue', text: 'Nota de credito' },
-    DEBITO: { color: 'green', text: 'Nota de debito' },    
+    DEBITO: { color: 'green', text: 'Nota de debito' },
   },
 }
 const Tag = ({ type, value }) => {

@@ -51,6 +51,7 @@ function ReportSalesProduct(props) {
       description: '',
       created_at: '',
       item_type: '',
+      sales_category: '',
     }
   }
 
@@ -82,6 +83,7 @@ function ReportSalesProduct(props) {
     description: { $like: `%25${filters.description}%25` },
     ...getDateRangeFilterReport(filters.created_at),
     ...(filters.item_type ? { item_type: filters.item_type } : {}),
+    ...(filters.sales_category ? { sales_category: filters.sales_category } : {}),
     ...(withPagination
       ? {
           $limit: pageSize,
