@@ -71,8 +71,12 @@ const saleActions = {
   fetchSales: async (dispatch, params = {}) => {
     dispatch({ type: 'FETCH_SALES START' })
     try {
-      const sales = await salesSrc.getSales({ ...params })
-      dispatch({ type: 'FETCH_SALES END', sales })
+      const result = await salesSrc.getSales({ ...params })
+      dispatch({
+        type: 'FETCH_SALES END',
+        sales: result.items || result,
+        pagination: result.pagination,
+      })
     } catch (error) {
       dispatch({ type: 'FETCH_SALES ERROR', error })
     }

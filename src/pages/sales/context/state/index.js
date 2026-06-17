@@ -26,6 +26,9 @@ const initialState = {
   stakeholdersOptionsList: [],
   documentServiceTypesOptionsList: [],
   sales: [],
+  salesPagination: {
+    total: 0,
+  },
   salesStatusList: [],
   currentSale: {},
   createdSaleId: null,

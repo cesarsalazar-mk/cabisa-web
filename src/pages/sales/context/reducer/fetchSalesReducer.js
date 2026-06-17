@@ -6,6 +6,10 @@ const fetchSalesReducer = (state, action) => {
       return {
         ...state,
         sales: action.sales,
+        salesPagination: {
+          ...state.salesPagination,
+          total: action.pagination?.total || 0,
+        },
         status: 'SUCCESS',
         loading: 'fetchSales',
         error: null,
