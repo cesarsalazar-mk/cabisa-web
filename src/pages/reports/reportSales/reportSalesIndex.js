@@ -1,107 +1,45 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
-import moment from 'moment'
-import { message, Row, Col, Statistic, Divider,Tag as AntTag } from 'antd'
-import GenericTable from '../../../components/genericTable'
-import ReportSalesFilters from './components/reportSalesFilters'
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+} from 'react'
+import { message } from 'antd'
 import HeaderPage from '../../../components/HeaderPage'
-import Tag from '../../../components/Tag'
+import ReportSalesTable from './components/reportSalesTable'
+import { permissions, stakeholdersStatus, stakeholdersTypes } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
-import { showErrors, getDateRangeFilter, numberFormat } from '../../../utils'
-import { stakeholdersStatus, stakeholdersTypes, permissions } from '../../../commons/types'
+import { showErrors, getDateRangeFilter } from '../../../utils'
 
-const { getFormattedValue } = numberFormat()
+const emptySummary = {
+  total_documents: 0,
+  total_billed: 0,
+}
 
-const getTotals = invoicesList =>
-  invoicesList.reduce(
-    (result, invoice) => {
-      const isTotallyPaid =
-        Number(invoice.paid_credit_amount) === Number(invoice.total_amount)
-      const paidInvoicesSalesCommissionTotal =
-        result.paidInvoicesSalesCommissionTotal +
-        (isTotallyPaid ? Number(invoice.sales_commission_amount) : 0)
-      const salesCommissionTotal =
-        result.salesCommissionTotal + Number(invoice.sales_commission_amount)
+const defaultPagination = {
+  current: 1,
+  pageSize: 10,
+  total: 0,
+}
 
-      return {
-        paidInvoicesSalesCommissionTotal,
-        unpaidInvoicesSalesCommissionTotal:
-          salesCommissionTotal - paidInvoicesSalesCommissionTotal,
-        salesCommissionTotal,
-        paidInvoicesTotal:
-          result.paidInvoicesTotal +
-          (isTotallyPaid ? Number(invoice.total_amount) : 0),
-        invoicesTotal: result.invoicesTotal + Number(invoice.total_amount),
-      }
-    },
-    {
-      paidInvoicesSalesCommissionTotal: 0,
-      unpaidInvoicesSalesCommissionTotal: 0,
-      salesCommissionTotal: 0,
-      paidInvoicesTotal: 0,
-      invoicesTotal: 0,
-    }
-  )
+const CONTENT_PADDING_BOTTOM = 24
 
-const columns = [
-  {
-    title: 'Tipo',
-    dataIndex: 'document_type', // Field that is goint to be rendered
-    key: 'document_type',
-    render: text => text === "RENT_INVOICE" ? <AntTag color='#87d067'>Nota de servicio</AntTag> : <AntTag color='#187fce'>Factura Manual</AntTag>,
-  },
+function getAvailablePageHeight(pageTop) {
+  const footer = document.querySelector('.ant-layout-footer')
+  const footerHeight = footer?.getBoundingClientRect().height || 30
 
-  {
-    title: '# Nota serv.',
-    dataIndex: 'related_internal_document_id', // Field that is goint to be rendered
-    key: 'related_internal_document_id',
-    render: text => <span>{text}</span>,
-  },
-  {
-    title: '# Documento',
-    dataIndex: 'document_number', // Field that is goint to be rendered
-    key: 'document_number',
-    render: text => <span>{text ? text : 'Factura Sistema'}</span>,
-  },
-  {
-    title: 'Fecha',
-    dataIndex: 'created_at', // Field that is goint to be rendered
-    key: 'created_at',
-    render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY hh:mm:ss A')}</span> : null,
-  },
-  {
-    title: 'Metodo de pago',
-    dataIndex: 'payment_method', // Field that is goint to be rendered
-    key: 'payment_method',
-    render: text => <Tag type='documentsPaymentMethods' value={text} />,
-  },
-  {
-    title: 'Monto',
-    dataIndex: 'total_amount', // Field that is goint to be rendered
-    key: 'total_amount',
-    render: text => <span>{`Q ${getFormattedValue(text.toFixed(2))}`}</span>,
-  },
-  {
-    title: 'Cliente',
-    dataIndex: 'stakeholder_name', // Field that is goint to be rendered
-    key: 'stakeholder_name',
-    render: text => <span>{text}</span>,
-  },
-  {    
-    title: 'Estado',
-    dataIndex: 'credit_status', // Field that is goint to be rendered
-    key: 'credit_status',
-    render: text => <Tag type='creditStatus' value={text} />
-  }
-]
+  return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
+}
 
 function ReportSales() {
+  const pageRef = useRef(null)
+  const [pageHeight, setPageHeight] = useState(null)
   const initFilters = useRef()
 
   if (!initFilters.current) {
     initFilters.current = {
-      start_date: '',
-      end_date: '',
+      dateRange: null,
       payment_method: '',
       document_type: '',
       seller_id: null,
@@ -111,157 +49,200 @@ function ReportSales() {
 
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initFilters.current)
+  const [filtersResetKey, setFiltersResetKey] = useState(0)
   const [dataSource, setDataSource] = useState([])
+  const [summary, setSummary] = useState(emptySummary)
+  const [pagination, setPagination] = useState(defaultPagination)
   const [paymentMethodsOptionsList, setPaymentMethodsOptionsList] = useState([])
   const [sellersOptionsList, setSellersOptionsList] = useState([])
   const [stakeholdersOptionsList, setStakeholdersOptionsList] = useState([])
-  const [totals, setTotals] = useState({})
 
-  const fetchSales = useCallback(() => {
+  const getReportParams = (
+    page = pagination.current,
+    pageSize = pagination.pageSize,
+    withPagination = true
+  ) => ({
+    ...getDateRangeFilter(filters.dateRange),
+    payment_method: filters.payment_method,
+    document_type: filters.document_type,
+    seller_id: filters.seller_id,
+    client_id: filters.client_id,
+    ...(withPagination
+      ? {
+          $limit: pageSize,
+          $offset: (page - 1) * pageSize,
+        }
+      : {}),
+  })
+
+  const loadData = useCallback(() => {
     setLoading(true)
-
-    ReportsSrc.getSales({
-      ...getDateRangeFilter(filters.dateRange),
-      payment_method: filters.payment_method,
-      document_type: filters.document_type,
-      seller_id: filters.seller_id,
-      client_id: filters.client_id,
-    })
-      .then(result => setDataSource(result))
+    ReportsSrc.getSales(getReportParams())
+      .then(result => {
+        setDataSource(result.items || result)
+        setSummary(result.summary || emptySummary)
+        setPagination(prevState => ({
+          ...prevState,
+          total: result.pagination?.total || 0,
+        }))
+      })
       .catch(error => showErrors(error))
       .finally(() => setLoading(false))
-  }, [filters])
+  }, [filters, pagination.current, pagination.pageSize])
 
   useEffect(() => {
-    fetchSales()
-  }, [fetchSales])
+    loadData()
+  }, [loadData])
 
   useEffect(() => {
-    setLoading(true)
-
     ReportsSrc.getPaymentMethods()
       .then(data => setPaymentMethodsOptionsList(data))
       .catch(_ => message.error('Error al cargar listados'))
-      .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    setTotals(getTotals(dataSource))
-  }, [dataSource])
+  useLayoutEffect(() => {
+    const updatePageHeight = () => {
+      if (!pageRef.current) return
 
-  const setSearchFilters = field => value =>
-    setFilters(prevState => ({ ...prevState, [field]: value }))
+      const { top } = pageRef.current.getBoundingClientRect()
+      setPageHeight(getAvailablePageHeight(top))
+    }
+
+    updatePageHeight()
+    window.addEventListener('resize', updatePageHeight)
+
+    const frameId = requestAnimationFrame(updatePageHeight)
+
+    return () => {
+      window.removeEventListener('resize', updatePageHeight)
+      cancelAnimationFrame(frameId)
+    }
+  }, [loading, summary, dataSource])
+
+  const setSearchFilters = field => value => {
+    let nextValue = value ?? ''
+    if ((field === 'client_id' || field === 'seller_id') && !value) {
+      nextValue = null
+    }
+    setFilters(prevState => ({ ...prevState, [field]: nextValue }))
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+  }
+
+  const clearFilters = () => {
+    setFilters({ ...initFilters.current, dateRange: null, client_id: null, seller_id: null })
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+    setFiltersResetKey(prevState => prevState + 1)
+  }
+
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination(prevState => ({
+      ...prevState,
+      current: page,
+      pageSize,
+    }))
+  }
 
   const handleSearchSeller = (seller_name = '') => {
-    const params = {
+    setLoading(true)
+    ReportsSrc.getSellersOptions({
       full_name: { $like: `%25${seller_name}%25` },
       rol_id: { $in: '1,2' },
       is_active: 1,
-    }
-
-    setLoading(true)
-
-    ReportsSrc.getSellersOptions(params)
+    })
       .then(data => setSellersOptionsList(data))
       .catch(_ => message.error('Error al cargar listado de vendedores'))
       .finally(() => setLoading(false))
   }
 
   const handleSearchStakeholder = stakeholder_name => {
-    const params = {
+    setLoading(true)
+    ReportsSrc.getStakeholdersOptions({
       name: { $like: `%25${stakeholder_name}%25` },
       status: stakeholdersStatus.ACTIVE,
       stakeholder_type: { $ne: stakeholdersTypes.PROVIDER },
-    }
-
-    setLoading(true)
-
-    ReportsSrc.getStakeholdersOptions(params)
+    })
       .then(data => setStakeholdersOptionsList(data))
       .catch(_ => message.error('Error al cargar listado de clientes'))
       .finally(() => setLoading(false))
   }
 
+  const exportExcel = base64Excel => {
+    try {
+      const uri = `data:application/octet-stream;base64,${base64Excel}`
+      const link = document.createElement('a')
+      link.setAttribute('download', 'Reporte-Orden-servicio.xls')
+      link.setAttribute('href', uri)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(document.body.lastChild)
+    } catch (e) {
+      console.log('ERROR ON EXPORT MANIFEST', e)
+      message.warning('Error al exportar el manifiesto')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const exportDataAction = () => {
     setLoading(true)
-    let params = {
-      ...getDateRangeFilter(filters.dateRange),
-      payment_method: filters.payment_method,
-      document_type: filters.document_type,
-      seller_id: filters.seller_id,
-      client_id: filters.client_id,
-      reportType:"salesReport"
-    }
-
-    ReportsSrc
-      .exportReport(params)
-      .then(data => {        
+    ReportsSrc.exportReport({
+      ...getReportParams(1, 10, false),
+      reportType: 'salesReport',
+    })
+      .then(data => {
         message.success('Reporte creado')
         exportExcel(data.reportExcel)
       })
-      .catch(_ => message.error('Error al cargar reporte facturas'))
+      .catch(_ => message.error('Error al cargar reporte ventas'))
       .finally(() => setLoading(false))
   }
 
-  const exportExcel = (base64Excel) =>{
-    try{      
-      let uri = 'data:application/octet-stream;base64,'+base64Excel;
-      let link = document.createElement('a');
-      link.setAttribute("download", `Reporte-Orden-servicio.xls`);
-      link.setAttribute("href", uri);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(document.body.lastChild);                    
-    }catch (e) {
-      console.log('ERROR ON EXPORT MANIFEST',e)            
-      message.warning('Error al exportar el manifiesto')
-    }finally{
-        setLoading(false)
-    }
-  }
-
-
   return (
-    <>
-      <HeaderPage 
-        title={'Reporte - Ordenes de servicio / Ventas'} 
-        titleButton={'Exportar'}
-        permissions={permissions.REPORTES}
-        showDrawer={exportDataAction}
+    <div
+      ref={pageRef}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: pageHeight ?? undefined,
+        maxHeight: pageHeight ?? undefined,
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ flexShrink: 0 }}>
+        <HeaderPage
+          title={'Reporte - Ordenes de servicio / Ventas'}
+          titleButton={'Exportar'}
+          permissions={permissions.REPORTES}
+          showDrawer={exportDataAction}
         />
-      <ReportSalesFilters
-        loading={loading}
-        filters={filters}
-        setSearchFilters={setSearchFilters}
-        handleSearchSeller={handleSearchSeller}
-        sellersOptionsList={sellersOptionsList}
-        handleSearchStakeholder={handleSearchStakeholder}
-        stakeholdersOptionsList={stakeholdersOptionsList}
-        paymentMethodsOptionsList={paymentMethodsOptionsList}
-      />
-      <GenericTable data={dataSource} loading={loading} columns={columns} />
-
-      <Divider className={'divider-custom-margins-users'} />
-
-      <Row gutter={16} style={{ textAlign: 'right' }} justify='end'>     
-        <Col span={5} style={{ textAlign: 'right' }}>
-          <div className={'title-space-field'}>
-            <Statistic
-              title='Total Facturado :'
-              value={getFormattedValue(totals.invoicesTotal)}
-            />
-          </div>
-        </Col>
-        <Col span={5} style={{ textAlign: 'right' }}>
-          <div className={'title-space-field'}>
-            <Statistic
-              title='Cantidad de documentos :'
-              value={dataSource.length}
-            />
-          </div>
-        </Col>
-      </Row>
-    </>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <ReportSalesTable
+          dataSource={dataSource}
+          summary={summary}
+          loading={loading}
+          filters={filters}
+          filtersResetKey={filtersResetKey}
+          setSearchFilters={setSearchFilters}
+          onClearFilters={clearFilters}
+          handleSearchSeller={handleSearchSeller}
+          sellersOptionsList={sellersOptionsList}
+          handleSearchStakeholder={handleSearchStakeholder}
+          stakeholdersOptionsList={stakeholdersOptionsList}
+          paymentMethodsOptionsList={paymentMethodsOptionsList}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+        />
+      </div>
+    </div>
   )
 }
 
