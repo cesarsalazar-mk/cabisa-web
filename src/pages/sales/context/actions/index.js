@@ -149,8 +149,9 @@ const saleActions = {
 
   fetchServiceOrders: async (dispatch, params = {}) => {
     dispatch({ type: 'FETCH_SERVICE_ORDERS START' })
-    try {      
-      const sales = await salesSrc.getServiceOrders({ ...params })
+    try {
+      const result = await salesSrc.getServiceOrders({ ...params })
+      const sales = result.items || result
       dispatch({ type: 'FETCH_SERVICE_ORDERS END', sales })
     } catch (error) {
       dispatch({ type: 'FETCH_SERVICE_ORDERS ERROR', error })
