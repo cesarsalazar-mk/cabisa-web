@@ -40,6 +40,11 @@ function getAvailablePageHeight(pageTop) {
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
 }
 
+function parseDocumentRefFromSearch(search = '') {
+  const params = new URLSearchParams(search)
+  return params.get('related_bill_document_number') || ''
+}
+
 function BillingManagementIndex(props) {
   const pageRef = useRef(null)
   const [pageHeight, setPageHeight] = useState(null)
@@ -71,7 +76,12 @@ function BillingManagementIndex(props) {
   const [summary, setSummary] = useState(emptySummary)
   const [pagination, setPagination] = useState(defaultPagination)
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState(initFilters.current)
+  const [filters, setFilters] = useState(() => ({
+    ...initFilters.current,
+    related_bill_document_number: parseDocumentRefFromSearch(
+      props.location?.search
+    ),
+  }))
   const [filtersResetKey, setFiltersResetKey] = useState(0)
   const [showModal, setShowModal] = useState(false)
   const [disableSubmit, setDisableSubmit] = useState(true)
@@ -130,6 +140,24 @@ function BillingManagementIndex(props) {
     loadData()
   }, [loadData])
 
+  useEffect(() => {
+    const docRef = parseDocumentRefFromSearch(props.location?.search)
+
+    setFilters(prevState => {
+      if (prevState.related_bill_document_number === docRef) return prevState
+
+      return {
+        ...prevState,
+        related_bill_document_number: docRef,
+      }
+    })
+
+    if (docRef) {
+      setPagination(prevState => ({ ...prevState, current: 1 }))
+      setFiltersResetKey(prevState => prevState + 1)
+    }
+  }, [props.location?.search])
+
   useLayoutEffect(() => {
     const updatePageHeight = () => {
       if (!pageRef.current) return
@@ -164,6 +192,10 @@ function BillingManagementIndex(props) {
     setFilters({ ...initFilters.current, dateRange: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
+
+    if (props.location?.search) {
+      props.history?.replace('/billManagement')
+    }
   }
 
   const handlePaginationChange = (page, pageSize) => {

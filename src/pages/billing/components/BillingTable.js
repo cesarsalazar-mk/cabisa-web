@@ -22,6 +22,7 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import Tag from '../../../components/Tag'
 import moment from 'moment'
+import BillingTotalCell from './BillingTotalCell'
 
 const { Search } = Input
 const { Option } = Select
@@ -167,11 +168,12 @@ function BillingTable(props) {
       ),
     },
     {
-      width: 120,
+      width: 160,
       title: 'Total',
       dataIndex: 'total',
       key: 'total',
-      render: text => <span>{text.toFixed(2)}</span>,
+      align: 'center',
+      render: (_, record) => <BillingTotalCell record={record} />,
     },
     {
       width: 120,
