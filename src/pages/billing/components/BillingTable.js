@@ -20,6 +20,7 @@ import {
   PrinterOutlined,
 } from '@ant-design/icons'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
+import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../components/Tag'
 import moment from 'moment'
 import BillingTotalCell from './BillingTotalCell'
@@ -228,9 +229,10 @@ function BillingTable(props) {
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
-        <Row gutter={16}>
+        <Row gutter={16} className={'margin-top-15'}>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Search
+              key={`billing-note-${props.filtersResetKey}`}
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='# Nota serv.'
               className={'cabisa-table-search customSearch'}
@@ -241,6 +243,7 @@ function BillingTable(props) {
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Search
+              key={`billing-doc-${props.filtersResetKey}`}
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='# Documento'
               className={'cabisa-table-search customSearch'}
@@ -251,6 +254,7 @@ function BillingTable(props) {
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Search
+              key={`billing-name-${props.filtersResetKey}`}
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='Nombre Cliente'
               className={'cabisa-table-search customSearch'}
@@ -261,21 +265,24 @@ function BillingTable(props) {
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
             <DatePicker
+              key={`billing-date-${props.filtersResetKey}`}
               style={{ width: '100%', height: '40px', borderRadius: '8px' }}
               placeholder='Fecha de facturacion'
               format='DD-MM-YYYY'
+              value={props.filters?.created_at}
               onChange={props.handleFiltersChange('created_at')}
             />
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Select
+              key={`billing-payment-${props.filtersResetKey}`}
               className={'single-select'}
               placeholder={'Metodo de pago'}
               size={'large'}
               style={{ width: '100%', height: '40px' }}
               getPopupContainer={trigger => trigger.parentNode}
               onChange={props.handleFiltersChange('paymentMethods')}
-              defaultValue=''
+              value={props.filters?.paymentMethods ?? ''}
             >
               <Option value={''}>
                 <AntTag color='gray'>Todo</AntTag>
@@ -289,6 +296,7 @@ function BillingTable(props) {
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Search
+              key={`billing-total-${props.filtersResetKey}`}
               type='tel'
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='Total'
@@ -297,6 +305,27 @@ function BillingTable(props) {
               onSearch={props.handleFiltersChange('totalInvoice')}
               size={'large'}
             />
+          </Col>
+        </Row>
+        <Row gutter={16} style={{ marginTop: 12 }}>
+          <Col span={24} style={{ textAlign: 'right' }}>
+            <Button
+              type='default'
+              className='cabisa-clear-filters-button'
+              style={{
+                minWidth: 120,
+                height: '40px',
+                borderRadius: '8px',
+                border: '1px dashed var(--cabisa-light-blue, #177fce)',
+                background: '#e6f7ff',
+                color: 'var(--cabisa-light-blue, #177fce)',
+                fontWeight: 500,
+              }}
+              onClick={props.onClearFilters}
+              icon={<CloseSquareOutlined />}
+            >
+              Limpiar
+            </Button>
           </Col>
         </Row>
       </div>

@@ -145,7 +145,7 @@ function Billing(props) {
       name:'',
       related_internal_document_id: '',
       nit: '',
-      created_at: '',
+      created_at: null,
       serviceTypes: '',
       paymentMethods: '',
       totalInvoice: '',
@@ -160,6 +160,7 @@ function Billing(props) {
   const [dataSource, setDataSource] = useState([])
   const [detailInvoiceData, setDetailInvoiceData] = useState(false)
   const [filters, setFilters] = useState(initFilters.current)
+  const [filtersResetKey, setFiltersResetKey] = useState(0)
   const [pagination, setPagination] = useState(defaultPagination)
   const [paymentMethodsOptionsList, setPaymentMethodsOptionsList] = useState([])
   const [
@@ -259,10 +260,13 @@ function Billing(props) {
     }))
   }
 
-  const resetFilters = () => {
-    setFilters(initFilters.current)
+  const clearFilters = () => {
+    setFilters({ ...initFilters.current, created_at: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
+    setFiltersResetKey(prevState => prevState + 1)
   }
+
+  const resetFilters = clearFilters
 
   const handlerDeleteRow = async row => {
     
@@ -351,8 +355,14 @@ function Billing(props) {
   }
 
   const setSearchFilters = field => value => {
+    const nextValue =
+      field === 'created_at'
+        ? value || null
+        : value === undefined || value === null
+        ? ''
+        : value
     setPagination(prevState => ({ ...prevState, current: 1 }))
-    setFilters(prevState => ({ ...prevState, [field]: value }))
+    setFilters(prevState => ({ ...prevState, [field]: nextValue }))
   }
 
   const newBill = () => props.history.push('/billingView')
@@ -401,8 +411,11 @@ function Billing(props) {
       >
         <BillingTable
           dataSource={dataSource}
+          filters={filters}
+          filtersResetKey={filtersResetKey}
           showDetail={showDetail}
           handleFiltersChange={setSearchFilters}
+          onClearFilters={clearFilters}
           paymentMethodsOptionsList={paymentMethodsOptionsList}
           handlerDeleteRow={handlerDeleteRow}
           handlerShowDocument={handlerShowDocument}
