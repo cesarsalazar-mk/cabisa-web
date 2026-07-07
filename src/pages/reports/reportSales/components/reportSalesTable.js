@@ -9,6 +9,7 @@ import {
   Tag as AntTag,
 } from 'antd'
 import Tag from '../../../../components/Tag'
+import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import { numberFormat } from '../../../../utils'
 import ReportSalesFilters from './reportSalesFilters'
 
@@ -141,8 +142,13 @@ const columns = [
     title: 'Monto',
     dataIndex: 'total_amount',
     key: 'total_amount',
-    render: text => (
-      <span>{`Q ${getFormattedValue(Number(text || 0).toFixed(2))}`}</span>
+    align: 'center',
+    render: (_, record) => (
+      <DocumentTotalCell
+        record={record}
+        totalField='total_amount'
+        showCurrencyPrefix
+      />
     ),
   },
   {

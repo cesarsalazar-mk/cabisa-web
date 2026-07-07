@@ -18,6 +18,7 @@ import Tag from '../../../../components/Tag'
 import moment from 'moment'
 import { numberFormat } from '../../../../utils'
 import ActionOptions from '../../../../components/actionOptions'
+import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 
 const { Panel } = Collapse
 const { Search } = Input
@@ -237,21 +238,30 @@ function ReportCashReceiptsTable(props) {
       width: 120,
       title: 'Monto pendiente',
       key: 'pending_amount',
+      align: 'center',
       render: (_, record) => (
         <span>
           {`Q ${getFormattedValue(
-            (Number(record.total_amount || 0) - Number(record.due || 0)).toFixed(2)
+            (
+              Number(record.adjusted_total ?? record.total_amount ?? 0) -
+              Number(record.due || 0)
+            ).toFixed(2)
           )}`}
         </span>
       ),
     },
     {
-      width: 120,
+      width: 160,
       title: 'Monto Total',
       dataIndex: 'total_amount',
       key: 'total_amount',
-      render: text => (
-        <span>{`Q ${getFormattedValue(Number(text || 0).toFixed(2))}`}</span>
+      align: 'center',
+      render: (_, record) => (
+        <DocumentTotalCell
+          record={record}
+          totalField='total_amount'
+          showCurrencyPrefix
+        />
       ),
     },
     {
