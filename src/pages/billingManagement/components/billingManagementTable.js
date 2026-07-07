@@ -268,11 +268,12 @@ function BillingManagementTable(props) {
           </Col>
           <Col xs={24} sm={12} md={4} lg={4}>
             <Search
-              key={`reference-${props.filtersResetKey}`}
+              key={`reference-${props.filtersResetKey}-${props.filters?.related_bill_document_number || ''}`}
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='Referencia # Documento'
               className={'cabisa-table-search customSearch'}
               size={'large'}
+              defaultValue={props.filters?.related_bill_document_number || undefined}
               onSearch={props.handleFiltersChange('related_bill_document_number')}
             />
           </Col>

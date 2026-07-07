@@ -5,6 +5,7 @@ import GenericTable from '../../../components/genericTable'
 import ReportAccountsReceivableFilters from './components/reportAccountsReceivableFilters'
 import HeaderPage from '../../../components/HeaderPage'
 import Tag from '../../../components/Tag'
+import DocumentTotalCell from '../../../components/DocumentTotalCell'
 import ReportsSrc from '../reportsSrc'
 import { showErrors } from '../../../utils'
 import { stakeholdersTypes } from '../../../commons/types'
@@ -19,16 +20,24 @@ const columns = [
   },
   {
     title: 'Monto a Pagar',
-    dataIndex: 'total_amount', // Field that is goint to be rendered
+    dataIndex: 'total_amount',
     key: 'total_amount',
-    render: text => (text ? <span>{text.toFixed(2)}</span> : null),
+    align: 'center',
+    render: (_, record) => (
+      <DocumentTotalCell
+        record={record}
+        totalField='total_amount'
+        showBillManagementLink={Boolean(record.document_number)}
+      />
+    ),
   },
   {
     title: 'Total Pendiente',
-    dataIndex: 'unpaid_credit_amount', // Field that is goint to be rendered
+    dataIndex: 'unpaid_credit_amount',
     key: 'unpaid_credit_amount',
+    align: 'center',
     render: text =>
-      text || text === 0 ? <span>{text.toFixed(2)}</span> : null,
+      text || text === 0 ? <span>{Number(text).toFixed(2)}</span> : null,
   },
   {
     title: 'Fecha de facturacion',

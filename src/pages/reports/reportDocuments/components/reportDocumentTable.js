@@ -14,6 +14,7 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
+import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import moment from 'moment'
 import { numberFormat } from '../../../../utils'
 
@@ -196,12 +197,17 @@ function ReportDocumentTable(props) {
       ),
     },
     {
-      width: 120,
+      width: 160,
       title: 'Total',
       dataIndex: 'total',
       key: 'total',
-      render: text => (
-        <span>{`Q ${getFormattedValue(Number(text || 0).toFixed(2))}`}</span>
+      align: 'center',
+      render: (_, record) => (
+        <DocumentTotalCell
+          record={record}
+          totalField='total'
+          showCurrencyPrefix
+        />
       ),
     },
     {

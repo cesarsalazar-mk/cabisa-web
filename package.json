@@ -1,6 +1,6 @@
 {
   "name": "cabisa",
-  "version": "1.3.11",
+  "version": "1.3.12",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.6.3",
