@@ -1,6 +1,7 @@
 import React, { useRef, useState, useLayoutEffect } from 'react'
+import { useHistory } from 'react-router-dom'
 import HeaderPage from '../../components/HeaderPage'
-import SalesTabIndex from './components/salesTabIndex'
+import ServiceView from './components/commons/serviceView'
 import { validatePermissions, validateRole } from '../../utils'
 import { actions, permissions, roles } from '../../commons/types'
 
@@ -15,10 +16,14 @@ function getAvailablePageHeight(pageTop) {
 
 function Sales() {
   const pageRef = useRef(null)
+  const history = useHistory()
   const [pageHeight, setPageHeight] = useState(null)
+  const [listLoading, setListLoading] = useState(true)
   const can = validatePermissions(permissions.VENTAS)
   const canEditAndCreate = can(actions.CREATE) || can(actions.EDIT)
   const isAdmin = validateRole(roles.ADMIN) || validateRole(roles.SELLS)
+
+  const newNote = () => history.push('/serviceNoteView')
 
   useLayoutEffect(() => {
     const updatePageHeight = () => {
@@ -37,7 +42,7 @@ function Sales() {
       window.removeEventListener('resize', updatePageHeight)
       cancelAnimationFrame(frameId)
     }
-  }, [])
+  }, [listLoading])
 
   return (
     <div
@@ -51,7 +56,12 @@ function Sales() {
       }}
     >
       <div style={{ flexShrink: 0 }}>
-        <HeaderPage title={'Ventas'} />
+        <HeaderPage
+          title={'Ventas'}
+          titleButton={can(actions.CREATE) ? 'Nueva nota de servicio' : undefined}
+          showDrawer={can(actions.CREATE) ? newNote : undefined}
+          permissions={permissions.VENTAS}
+        />
       </div>
       <div
         style={{
@@ -62,7 +72,11 @@ function Sales() {
           overflow: 'hidden',
         }}
       >
-        <SalesTabIndex canEditAndCreate={canEditAndCreate} isAdmin={isAdmin} />
+        <ServiceView
+          canEditAndCreate={canEditAndCreate}
+          isAdmin={isAdmin}
+          onLoadingChange={setListLoading}
+        />
       </div>
     </div>
   )

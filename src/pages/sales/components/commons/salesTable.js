@@ -1,35 +1,27 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import moment from 'moment'
 import {
   Table,
   Col,
-  Input,
-  Button,
   Row,
   Card,
   DatePicker,
   Select,
   Tag as AntTag,
-  message,
   Pagination,
+  Input,
+  Button,
 } from 'antd'
 import RightOutlined from '@ant-design/icons/lib/icons/RightOutlined'
 import DownOutlined from '@ant-design/icons/lib/icons/DownOutlined'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
+import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
-import { useSale, saleActions } from '../../context'
-import { validatePermissions, showErrors, formatPhone } from '../../../../utils'
-import { actions } from '../../../../commons/types'
+import { formatPhone } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
-const { setSaleState, fetchSales, fetchSalesStatus, cancelSale } = saleActions
-
-const defaultPagination = {
-  current: 1,
-  pageSize: 10,
-}
 
 const staticSectionStyle = { flexShrink: 0 }
 
@@ -80,58 +72,9 @@ const tablePaginationStyle = {
 }
 
 function SalesTable(props) {
-  const [searchParams, setSearchParams] = useState({})
-  const [pagination, setPagination] = useState(defaultPagination)
-  const searchParamsRef = useRef(searchParams)
-  const paginationRef = useRef(pagination)
   const tableSectionRef = useRef(null)
   const tableWrapperRef = useRef(null)
   const [tableScrollY, setTableScrollY] = useState(200)
-  const [{ error, status, loading, salesPagination, ...saleState }, saleDispatch] =
-    useSale()
-
-  searchParamsRef.current = searchParams
-  paginationRef.current = pagination
-
-  const loadSales = useCallback(
-    (overrides = {}) => {
-      const current = overrides.current ?? paginationRef.current.current
-      const pageSize = overrides.pageSize ?? paginationRef.current.pageSize
-      const params = {
-        ...searchParamsRef.current,
-        ...overrides.params,
-        $limit: pageSize,
-        $offset: (current - 1) * pageSize,
-      }
-
-      fetchSales(saleDispatch, params)
-    },
-    [saleDispatch]
-  )
-
-  useEffect(() => {
-    if (props.isDrawerVisible) return
-
-    if (status === 'ERROR') {
-      showErrors(error)
-      setSaleState(saleDispatch, { loading: null, error: null, status: 'IDLE' })
-    }
-
-    if (status === 'SUCCESS' && loading === 'cancelSale') {
-      message.success('Venta cancelada exitosamente')
-      loadSales()
-    }
-
-    if (status === 'SUCCESS' && loading === 'approveSale') {
-      message.success('Factura generada exitosamente')
-      loadSales()
-    }
-  }, [error, status, loading, saleState, saleDispatch, props.isDrawerVisible, loadSales])
-
-  useEffect(() => {
-    loadSales()
-    fetchSalesStatus(saleDispatch)
-  }, [loadSales, saleDispatch])
 
   useLayoutEffect(() => {
     const updateTableHeight = () => {
@@ -171,61 +114,11 @@ function SalesTable(props) {
       resizeObserver?.disconnect()
     }
   }, [
-    status,
-    saleState?.sales?.length,
-    pagination.pageSize,
-    pagination.current,
+    props.loading,
+    props.dataSource?.length,
+    props.pagination?.pageSize,
+    props.pagination?.current,
   ])
-
-  const getSearchParams = (key, value) => {
-    if (key === 'text') return { id: { $like: `%25${value}%25` } }
-
-    if (key === 'date') {
-      const start_date = value
-        ? { $like: `%25${moment(value).format('YYYY-MM-DD')}%25` }
-        : ''
-      return { start_date }
-    }
-
-    if (key === 'status') return { status: value }
-  }
-
-  const getFilteredData = (key, value) => {
-    const newSearchParams = { ...searchParams, ...getSearchParams(key, value) }
-    setSearchParams(newSearchParams)
-    searchParamsRef.current = newSearchParams
-    setPagination(prevState => ({ ...prevState, current: 1 }))
-    paginationRef.current = { ...paginationRef.current, current: 1 }
-
-    loadSales({
-      current: 1,
-      params: newSearchParams,
-    })
-  }
-
-  const handlePaginationChange = (page, pageSize) => {
-    setPagination({ current: page, pageSize })
-    paginationRef.current = { current: page, pageSize }
-    loadSales({ current: page, pageSize })
-  }
-
-  const handlerEditRow = async currentSale => {
-    await setSaleState(saleDispatch, { currentSale })
-    props.showDrawer(true)
-  }
-
-  const handlerApproveRow = row => {
-    props.history.push({
-      pathname: '/ServiceNoteBill',
-      state: row,
-    })
-  }
-
-  const handlerDeleteRow = row => {
-    cancelSale(saleDispatch, { document_id: row.id })
-  }
-
-  const can = validatePermissions(props.permissions)
 
   const columns = [
     {
@@ -277,9 +170,9 @@ function SalesTable(props) {
           editPermissions={false}
           data={data}
           permissionId={props.permissions}
-          handlerDeleteRow={handlerDeleteRow}
-          handlerEditRow={handlerEditRow}
-          handlerApproveRow={handlerApproveRow}
+          handlerDeleteRow={props.handlerDeleteRow}
+          handlerEditRow={props.handlerEditRow}
+          handlerApproveRow={props.handlerApproveRow}
           deleteAction='nullify'
           editAction={!data.has_related_invoice ? 'edit' : 'show'}
         />
@@ -290,61 +183,71 @@ function SalesTable(props) {
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
-        <Row gutter={16}>
-          <Col xs={24} sm={12} md={8} lg={8}>
+        <Row gutter={16} className={'margin-top-15'}>
+          <Col xs={24} sm={12} md={5} lg={5}>
             <Search
-              className={'customSearch'}
+              key={`sale-id-${props.filtersResetKey}`}
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
               placeholder='Buscar por No. de boleta'
-              style={{ width: '100%', height: '40px' }}
+              className={'cabisa-table-search customSearch'}
               size={'large'}
-              onSearch={e => getFilteredData('text', e)}
+              onSearch={props.handleFiltersChange('saleId')}
             />
           </Col>
           <Col xs={24} sm={12} md={5} lg={5}>
             <DatePicker
-              placeholder={'Buscar por fecha'}
-              style={{ width: '100%', height: '40px', borderRadius: '8px' }}
+              key={`sale-date-${props.filtersResetKey}`}
+              style={{ width: '100%', height: '40px', borderRadius: '6px' }}
+              placeholder='Buscar por fecha'
               format='DD-MM-YYYY'
-              onChange={e => getFilteredData('date', e)}
+              value={props.filters?.startDate}
+              onChange={props.handleFiltersChange('startDate')}
             />
           </Col>
           <Col
             xs={24}
             sm={12}
-            md={5}
-            lg={5}
+            md={4}
+            lg={4}
             className={props.warehouse ? 'stash-component' : ''}
           >
             <Select
-              defaultValue={''}
+              key={`sale-status-${props.filtersResetKey}`}
               className={'single-select'}
               placeholder={'Status'}
               size={'large'}
               style={{ width: '100%', height: '40px' }}
               getPopupContainer={trigger => trigger.parentNode}
-              onChange={value => getFilteredData('status', value)}
+              onChange={props.handleFiltersChange('status')}
+              value={props.filters?.status ?? ''}
             >
               <Option value={''}>
-                <AntTag color='cyan'>Todo</AntTag>
+                <AntTag color='gray'>Todo</AntTag>
               </Option>
-              {saleState.salesStatusList?.map(value => (
+              {props.salesStatusList?.map(value => (
                 <Option key={value} value={value}>
                   <Tag type='documentStatus' value={value} />
                 </Option>
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={24} md={6} lg={6} className='text-right'>
+          <Col xs={24} sm={12} md={3} lg={3}>
             <Button
-              className={
-                can(actions.CREATE)
-                  ? 'title-cabisa new-button'
-                  : 'hide-component title-cabisa new-button'
-              }
-              onClick={props.newNote}
+              type='default'
+              className='cabisa-clear-filters-button'
+              style={{
+                width: '100%',
+                height: '40px',
+                borderRadius: '8px',
+                border: '1px dashed var(--cabisa-light-blue, #177fce)',
+                background: '#e6f7ff',
+                color: 'var(--cabisa-light-blue, #177fce)',
+                fontWeight: 500,
+              }}
+              onClick={props.onClearFilters}
+              icon={<CloseSquareOutlined />}
             >
-              {props.buttonTitle}
+              Limpiar
             </Button>
           </Col>
         </Row>
@@ -359,9 +262,9 @@ function SalesTable(props) {
           <div ref={tableWrapperRef} style={tableWrapperStyle}>
             <Table
               scroll={{ y: tableScrollY }}
-              loading={status === 'LOADING' && loading === 'fetchSales'}
+              loading={props.loading}
               className={'CustomTableClass'}
-              dataSource={saleState?.sales}
+              dataSource={props.dataSource}
               columns={columns}
               pagination={false}
               rowKey='id'
@@ -399,13 +302,13 @@ function SalesTable(props) {
           </div>
           <Pagination
             style={tablePaginationStyle}
-            current={pagination.current}
-            pageSize={pagination.pageSize}
-            total={salesPagination?.total || 0}
+            current={props.pagination?.current}
+            pageSize={props.pagination?.pageSize}
+            total={props.pagination?.total}
             showSizeChanger
             pageSizeOptions={['5', '10', '20', '50']}
-            onChange={handlePaginationChange}
-            onShowSizeChange={handlePaginationChange}
+            onChange={props.onPaginationChange}
+            onShowSizeChange={props.onPaginationChange}
           />
         </Card>
       </div>

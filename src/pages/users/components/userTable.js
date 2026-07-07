@@ -1,42 +1,123 @@
-import React from 'react'
-import { Table, Col, Input, Row, Card, Tag } from 'antd'
+import React, { useLayoutEffect, useRef, useState } from 'react'
+import { Table, Col, Input, Row, Card, Tag, Pagination, Button } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
+import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import ActionOptions from '../../../components/actionOptions'
 import { permissions } from '../../../commons/types'
 
 const { Search } = Input
 
+const staticSectionStyle = { flexShrink: 0 }
+
+const pageLayoutStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
+}
+
+const tableSectionStyle = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  marginTop: 15,
+  overflow: 'hidden',
+}
+
+const tableCardStyle = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}
+
+const tableCardBodyStyle = {
+  flex: 1,
+  minHeight: 0,
+  padding: '12px 24px',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+}
+
+const tableWrapperStyle = {
+  flex: 1,
+  minHeight: 0,
+  overflow: 'hidden',
+}
+
+const tablePaginationStyle = {
+  flexShrink: 0,
+  marginTop: 12,
+  textAlign: 'right',
+}
+
 function UserTable(props) {
-  const getFilteredData = data => {
-    props.handlerTextSearch(data)
-  }
+  const tableSectionRef = useRef(null)
+  const tableWrapperRef = useRef(null)
+  const [tableScrollY, setTableScrollY] = useState(200)
 
-  const handlerEditRow = row => {
-    props.handlerEditRow(row)
-  }
+  useLayoutEffect(() => {
+    const updateTableHeight = () => {
+      if (!tableSectionRef.current || !tableWrapperRef.current) return
 
-  const handlerDeleteRow = row => {
-    props.handlerDeleteRow(row)
-  }
+      const wrapperHeight = tableWrapperRef.current.clientHeight
+      const tableHead =
+        tableSectionRef.current.querySelector('.ant-table-thead') ||
+        tableSectionRef.current.querySelector('.ant-table-header')
+      const headHeight = tableHead?.getBoundingClientRect().height || 0
+      const scrollHeight = wrapperHeight - headHeight - 4
 
-  const handlerEditPermissions = row => {
-    props.handlerEditPermissions(row)
-  }
+      setTableScrollY(Math.max(scrollHeight, 80))
+    }
+
+    const scheduleUpdate = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(updateTableHeight)
+      })
+    }
+
+    scheduleUpdate()
+    window.addEventListener('resize', scheduleUpdate)
+
+    let resizeObserver
+    const sectionEl = tableSectionRef.current
+    const wrapperEl = tableWrapperRef.current
+
+    if (window.ResizeObserver && sectionEl) {
+      resizeObserver = new ResizeObserver(scheduleUpdate)
+      resizeObserver.observe(sectionEl)
+      if (wrapperEl) resizeObserver.observe(wrapperEl)
+    }
+
+    return () => {
+      window.removeEventListener('resize', scheduleUpdate)
+      resizeObserver?.disconnect()
+    }
+  }, [
+    props.loading,
+    props.dataSource?.length,
+    props.pagination?.pageSize,
+    props.pagination?.current,
+  ])
 
   const columns = [
     {
       title: 'Nombre',
-      dataIndex: 'full_name', // Field that is goint to be rendered
+      dataIndex: 'full_name',
       key: 'full_name',
     },
     {
       title: 'Email',
-      dataIndex: 'email', // Field that is goint to be rendered
+      dataIndex: 'email',
       key: 'email',
     },
     {
       title: 'Rol',
-      dataIndex: 'rol_id', // Field that is goint to be rendered
+      dataIndex: 'rol_id',
       key: 'rol_id',
       render: text => (
         <span>
@@ -56,7 +137,7 @@ function UserTable(props) {
     },
     {
       title: '',
-      dataIndex: '_id', // Field that is goint to be rendered
+      dataIndex: '_id',
       key: '_id',
       render: (_, data) => (
         <ActionOptions
@@ -64,48 +145,80 @@ function UserTable(props) {
           showDeleteBtn
           data={data}
           permissionId={permissions.USUARIOS}
-          handlerDeleteRow={handlerDeleteRow}
-          handlerEditRow={handlerEditRow}
-          handlerEditPermissions={handlerEditPermissions}
+          handlerDeleteRow={props.handlerDeleteRow}
+          handlerEditRow={props.handlerEditRow}
+          handlerEditPermissions={props.handlerEditPermissions}
         />
       ),
     },
   ]
 
   return (
-    <>
-      <Row>
-        <Col xs={18} sm={18} md={18} lg={18}>
-          <Search
-            className={'customSearch'}
-            prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
-            placeholder='Presiona enter para buscar por nombre'
-            style={{ width: '70%', height: '40px' }}
-            size={'large'}
-            onSearch={e => getFilteredData(e)}
+    <div style={pageLayoutStyle}>
+      <div style={staticSectionStyle}>
+        <Row gutter={16} className={'margin-top-15'}>
+          <Col xs={24} sm={12} md={8} lg={8}>
+            <Search
+              key={`user-name-${props.filtersResetKey}`}
+              className={'cabisa-table-search customSearch'}
+              prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
+              placeholder='Presiona enter para buscar por nombre'
+              size={'large'}
+              onSearch={props.handleFiltersChange('fullName')}
+            />
+          </Col>
+          <Col xs={24} sm={12} md={3} lg={3}>
+            <Button
+              type='default'
+              className='cabisa-clear-filters-button'
+              style={{
+                width: '100%',
+                height: '40px',
+                borderRadius: '8px',
+                border: '1px dashed var(--cabisa-light-blue, #177fce)',
+                background: '#e6f7ff',
+                color: 'var(--cabisa-light-blue, #177fce)',
+                fontWeight: 500,
+              }}
+              onClick={props.onClearFilters}
+              icon={<CloseSquareOutlined />}
+            >
+              Limpiar
+            </Button>
+          </Col>
+        </Row>
+      </div>
+
+      <div ref={tableSectionRef} style={tableSectionStyle}>
+        <Card
+          className={'card-border-radius'}
+          style={tableCardStyle}
+          bodyStyle={tableCardBodyStyle}
+        >
+          <div ref={tableWrapperRef} style={tableWrapperStyle}>
+            <Table
+              scroll={{ y: tableScrollY }}
+              loading={props.loading}
+              className={'CustomTableClass'}
+              dataSource={props.dataSource}
+              columns={columns}
+              rowKey='id'
+              pagination={false}
+            />
+          </div>
+          <Pagination
+            style={tablePaginationStyle}
+            current={props.pagination?.current}
+            pageSize={props.pagination?.pageSize}
+            total={props.pagination?.total}
+            showSizeChanger
+            pageSizeOptions={['5', '10', '20', '50']}
+            onChange={props.onPaginationChange}
+            onShowSizeChange={props.onPaginationChange}
           />
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={24} sm={24} md={24} lg={24}>
-          <Card className={'card-border-radius margin-top-15'}>
-            <Row>
-              <Col xs={24} sm={24} md={24} lg={24}>
-                <Table
-                  scroll={{ y: 320 }}
-                  loading={props.loading}
-                  className={'CustomTableClass'}
-                  dataSource={props.dataSource}
-                  columns={columns}
-                  rowKey='id'
-                  pagination={{ pageSize: 5 }}
-                />
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
-    </>
+        </Card>
+      </div>
+    </div>
   )
 }
 

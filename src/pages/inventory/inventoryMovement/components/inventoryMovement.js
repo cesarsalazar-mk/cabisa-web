@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useState, useRef } from 'react'
 import moment from 'moment'
 import { useHistory } from 'react-router'
 import { message } from 'antd'
@@ -10,11 +10,17 @@ import Tag from '../../../../components/Tag'
 import { showErrors, validateRole } from '../../../../utils'
 import { permissions, documentsStatus, roles } from '../../../../commons/types'
 
+const defaultPagination = {
+  current: 1,
+  pageSize: 10,
+  total: 0,
+}
+
 const getColumns = ({ DeleteRow, EditRow, isAdmin }) => [
   {
     width: 120,
     title: 'Fecha',
-    dataIndex: 'start_date', // Field that is goint to be rendered
+    dataIndex: 'start_date',
     key: 'start_date',
     render: text =>
       text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : '',
@@ -34,14 +40,14 @@ const getColumns = ({ DeleteRow, EditRow, isAdmin }) => [
   {
     width: 120,
     title: 'Status',
-    dataIndex: 'status', // Field that is goint to be rendered
+    dataIndex: 'status',
     key: 'status',
     render: text => <Tag type='documentStatus' value={text} />,
   },
   {
     width: 200,
     title: '',
-    dataIndex: 'id', // Field that is goint to be rendered
+    dataIndex: 'id',
     key: 'id',
     render: (_, data) => (
       <ActionOptions
@@ -60,49 +66,92 @@ const getColumns = ({ DeleteRow, EditRow, isAdmin }) => [
   },
 ]
 
-function InventoryMovementComponent() {
+function InventoryMovementComponent({ onLoadingChange }) {
   const history = useHistory()
-  const [loading, setLoading] = useState(false)
+  const initFilters = useRef()
+
+  if (!initFilters.current) {
+    initFilters.current = {
+      documentNumber: '',
+      status: '',
+    }
+  }
+
+  const [loading, setLoading] = useState(true)
   const [dataSource, setDataSource] = useState([])
   const [isVisible, setIsVisible] = useState(false)
-  const [searchText, setSearchText] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [filters, setFilters] = useState(initFilters.current)
+  const [filtersResetKey, setFiltersResetKey] = useState(0)
+  const [pagination, setPagination] = useState(defaultPagination)
   const [editDataDrawer, setEditDataDrawer] = useState(null)
 
   const isAdmin = validateRole(roles.ADMIN)
 
-  const getPurchases = useCallback(() => {
+  const getPurchasesParams = (
+    page = pagination.current,
+    pageSize = pagination.pageSize
+  ) => ({
+    ...(filters.documentNumber
+      ? {
+          related_external_document_id: {
+            $like: `%25${filters.documentNumber}%25`,
+          },
+        }
+      : {}),
+    ...(filters.status ? { status: filters.status } : {}),
+    $limit: pageSize,
+    $offset: (page - 1) * pageSize,
+  })
+
+  const loadData = useCallback(() => {
     setLoading(true)
+    onLoadingChange?.(true)
 
     inventorySrc
-      .getPurchases({
-        related_external_document_id: { $like: `%25${searchText}%25` },
-        status: statusFilter,
+      .getPurchases(getPurchasesParams())
+      .then(result => {
+        setDataSource(result.items || result)
+        setPagination(prevState => ({
+          ...prevState,
+          total: result.pagination?.total || 0,
+        }))
       })
-      .then(data => setDataSource(data))
       .catch(error => showErrors(error))
-      .finally(() => setLoading(false))
-  }, [searchText, statusFilter])
+      .finally(() => {
+        setLoading(false)
+        onLoadingChange?.(false)
+      })
+  }, [filters, pagination.current, pagination.pageSize, onLoadingChange])
 
   useEffect(() => {
-    getPurchases()
-  }, [getPurchases])
+    loadData()
+  }, [loadData])
 
-  const searchByTxt = data => setSearchText(data)
+  const setSearchFilters = field => value => {
+    setFilters(prevState => ({
+      ...prevState,
+      [field]: value === undefined || value === null ? '' : value,
+    }))
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+  }
 
-  const searchByStatus = data => setStatusFilter(data)
+  const clearFilters = () => {
+    setFilters({ ...initFilters.current })
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+    setFiltersResetKey(prevState => prevState + 1)
+  }
+
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination(prevState => ({
+      ...prevState,
+      current: page,
+      pageSize,
+    }))
+  }
 
   const goCreateNewItem = () => history.push('/inventoryMovementsView')
 
   const onClose = () => setIsVisible(false)
-
-  const clearSearch = () => {
-    if (searchText === '' && statusFilter === '') getPurchases()
-    else {
-      setSearchText('')
-      setStatusFilter('')
-    }
-  }
 
   const EditRow = data => {
     setEditDataDrawer(data)
@@ -111,15 +160,19 @@ function InventoryMovementComponent() {
 
   const DeleteRow = data => {
     setLoading(true)
+    onLoadingChange?.(true)
 
     inventorySrc
       .cancelPurchase({ document_id: data.id })
       .then(_ => {
-        clearSearch()
         message.success('Compra anulada exitosamente')
+        loadData()
       })
       .catch(error => showErrors(error))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        onLoadingChange?.(false)
+      })
   }
 
   const columns = getColumns({ DeleteRow, EditRow, isAdmin })
@@ -130,9 +183,13 @@ function InventoryMovementComponent() {
         columns={columns}
         loading={loading}
         dataSource={dataSource}
+        filters={filters}
+        filtersResetKey={filtersResetKey}
+        pagination={pagination}
+        handleFiltersChange={setSearchFilters}
+        onClearFilters={clearFilters}
+        onPaginationChange={handlePaginationChange}
         goCreateNewItem={goCreateNewItem}
-        handlerTextSearch={searchByTxt}
-        handlerCategoryService={searchByStatus}
       />
 
       <InventoryMovementDrawer
@@ -142,7 +199,7 @@ function InventoryMovementComponent() {
         forbidEdition={
           !isAdmin || editDataDrawer?.status === documentsStatus.CANCELLED
         }
-        getPurchases={getPurchases}
+        getPurchases={loadData}
       />
     </>
   )

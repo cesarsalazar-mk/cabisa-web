@@ -6,18 +6,9 @@ const url = stage.stakeholderUrl
 
 const getSuppliers = params =>
   api.get(url, {
+    stakeholder_type: stakeholdersTypes.PROVIDER,
+    status: stakeholdersStatus.ACTIVE,
     ...params,
-    stakeholder_type: stakeholdersTypes.PROVIDER,
-    status: stakeholdersStatus.ACTIVE,
-  })
-const getSuppliersFilter = name =>
-  api.get(url, {
-    open_parenthesis: 'name',
-    close_parenthesis: 'nit',
-    name: { $like: `%25${name}%25` },
-    nit: { $or: true, $like: `%25${name}%25` },
-    stakeholder_type: stakeholdersTypes.PROVIDER,
-    status: stakeholdersStatus.ACTIVE,
   })
 const createSupplier = _users => api.post(url, _users)
 const updateSupplier = _users => api.put(url, _users)
@@ -29,7 +20,6 @@ const SuppliersSrc = {
   createSupplier,
   updateSupplier,
   deleteSupplier,
-  getSuppliersFilter,
 }
 
 export default SuppliersSrc

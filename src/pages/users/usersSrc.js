@@ -3,7 +3,7 @@ import { stage } from '../../commons/credentials'
 
 const urlUser = stage.usersUrl
 
-const getUsers = () => api.get(urlUser)
+const getUsers = params => api.get(urlUser, params)
 const getUsersPermissions = email => api.get(urlUser, { email })
 const createUser = _users => api.post(urlUser, _users)
 const updateUser = _users => api.put(urlUser, _users)

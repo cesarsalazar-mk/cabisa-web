@@ -77,8 +77,10 @@ const saleActions = {
         sales: result.items || result,
         pagination: result.pagination,
       })
+      return result
     } catch (error) {
       dispatch({ type: 'FETCH_SALES ERROR', error })
+      throw error
     }
   },
 

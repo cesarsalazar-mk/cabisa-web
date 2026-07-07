@@ -4,11 +4,11 @@ import {
   Col,
   DatePicker,
   Input,
-  Pagination,
   Row,
   Select,
   Table,
   Tag as AntTag,
+  Pagination,
   Button,
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
@@ -74,9 +74,6 @@ function BillingTable(props) {
   const tableWrapperRef = useRef(null)
   const [tableScrollY, setTableScrollY] = useState(200)
 
-  const handlerEditRow = data => props.showDetail(data)
-  const handlerDeleteRowOld = data => props.handlerDeleteRowOld(data)
-
   useLayoutEffect(() => {
     const updateTableHeight = () => {
       if (!tableSectionRef.current || !tableWrapperRef.current) return
@@ -121,6 +118,10 @@ function BillingTable(props) {
     props.pagination?.current,
   ])
 
+  const handlerEditRow = data => props.showDetail(data)
+
+  const handlerDeleteRowOld = data => props.handlerDeleteRowOld(data)
+
   const columns = [
     {
       width: 125,
@@ -133,7 +134,7 @@ function BillingTable(props) {
       width: 300,
       title: 'Cliente',
       dataIndex: 'client',
-      key: 'client',
+      key: 'client ',
       render: (_, record) => (
         <>
           <span>{record.stakeholder_name}</span>
@@ -143,10 +144,10 @@ function BillingTable(props) {
       ),
     },
     {
-      width: 120,
+      width: 180,
       title: 'Fecha de facturacion',
       dataIndex: 'created_at',
-      key: 'created_at',
+      key: 'created_at ',
       render: text => (
         <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
       ),
@@ -155,8 +156,8 @@ function BillingTable(props) {
       width: 120,
       title: 'Total',
       dataIndex: 'total',
-      key: 'total',
-      render: text => <span>{Number(text || 0).toFixed(2)}</span>,
+      key: 'total ',
+      render: text => <span>{text.toFixed(2)}</span>,
     },
     {
       width: 120,
@@ -186,7 +187,7 @@ function BillingTable(props) {
           handlerDeleteRow={handlerDeleteRowOld}
           handlerEditRow={handlerEditRow}
           deleteAction='nullify'
-          editAction='show'
+          editAction={'show'}
         />
       ),
     },
@@ -195,7 +196,7 @@ function BillingTable(props) {
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
-        <Row gutter={16}>
+        <Row gutter={16} className={'margin-top-15'}>
           <Col xs={24} sm={12} md={8} lg={4}>
             <Search
               key={`document-${props.filtersResetKey}`}
@@ -272,12 +273,14 @@ function BillingTable(props) {
               size={'large'}
             />
           </Col>
-          <Col xs={24} sm={12} md={8} lg={4}>
+        </Row>
+        <Row gutter={16} style={{ marginTop: 12 }}>
+          <Col span={24} style={{ textAlign: 'right' }}>
             <Button
               type='default'
               className='cabisa-clear-filters-button'
               style={{
-                width: '100%',
+                minWidth: 120,
                 height: '40px',
                 borderRadius: '8px',
                 border: '1px dashed var(--cabisa-light-blue, #177fce)',
