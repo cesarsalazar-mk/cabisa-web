@@ -6,18 +6,9 @@ const url = stage.stakeholderUrl
 
 const getClients = params =>
   api.get(url, {
+    stakeholder_type: { $ne: stakeholdersTypes.PROVIDER },
+    status: stakeholdersStatus.ACTIVE,
     ...params,
-    stakeholder_type: { $ne: stakeholdersTypes.PROVIDER },
-    status: stakeholdersStatus.ACTIVE,
-  })
-const getClientsFilter = name =>
-  api.get(url, {
-    open_parenthesis: 'name',
-    close_parenthesis: 'nit',
-    name: { $like: `%25${name}%25` },
-    nit: { $or: true, $like: `%25${name}%25` },
-    stakeholder_type: { $ne: stakeholdersTypes.PROVIDER },
-    status: stakeholdersStatus.ACTIVE,
   })
 const createClient = _users => api.post(url, _users)
 const updateClient = _users => api.put(url, _users)
@@ -31,7 +22,6 @@ const ClientsSrc = {
   createClient,
   updateClient,
   deleteClient,
-  getClientsFilter,
 }
 
 export default ClientsSrc

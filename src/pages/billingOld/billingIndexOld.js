@@ -32,6 +32,14 @@ function getAvailablePageHeight(pageTop) {
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
 }
 
+const contentStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
+  overflow: 'hidden',
+}
+
 export function getDetailData(data) {
   const getParentProduct = (products, childProduct) => {    
     if (!childProduct.parent_product_id) return {}    
@@ -134,15 +142,14 @@ export function getDetailData(data) {
 
 function Billing(props) {
   const pageRef = useRef(null)
-  const [pageHeight, setPageHeight] = useState(null)
   const initFilters = useRef()
 
   if (!initFilters.current) {
     initFilters.current = {
       id: '',
       document_number: '',
-      name: '',
-      description: '',
+      name:'',
+      description:'',
       related_internal_document_id: '',
       nit: '',
       created_at: null,
@@ -154,11 +161,12 @@ function Billing(props) {
 
   const isAdmin = validateRole(roles.ADMIN)
 
-  const [loading, setLoading] = useState(false)
+  const [pageHeight, setPageHeight] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [loadingBill, setLoadingBill] = useState(false)
   const [visible, setVisible] = useState(false)
   const [dataSource, setDataSource] = useState([])
-  const [detailInvoiceData, setDetailInvoiceData] = useState(false)
+  const [detailInvoiceData, setDetailInvoiceData] = useState(null)
   const [filters, setFilters] = useState(initFilters.current)
   const [filtersResetKey, setFiltersResetKey] = useState(0)
   const [pagination, setPagination] = useState(defaultPagination)
@@ -197,18 +205,24 @@ function Billing(props) {
       .finally(() => setLoading(false))
   }, [])
 
-  const getReportParams = (
+  const getInvoiceParams = (
     page = pagination.current,
     pageSize = pagination.pageSize
   ) => ({
     system_invoice: true,
-    related_internal_document_id: {
-      $like: `%25${filters.related_internal_document_id || ''}%25`,
-    },
-    id: { $like: `%25${filters.id || ''}%25` },
-    name: { $like: `%25${filters.name || ''}%25` },
-    description: { $like: `%25${filters.description || ''}%25` },
-    nit: { $like: `%25${filters.nit || ''}%25` },
+    ...(filters.related_internal_document_id
+      ? {
+          related_internal_document_id: {
+            $like: `%25${filters.related_internal_document_id}%25`,
+          },
+        }
+      : {}),
+    ...(filters.id ? { id: { $like: `%25${filters.id}%25` } } : {}),
+    ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
+    ...(filters.description
+      ? { description: { $like: `%25${filters.description}%25` } }
+      : {}),
+    ...(filters.nit ? { nit: { $like: `%25${filters.nit}%25` } } : {}),
     ...(filters.created_at
       ? {
           created_at: {
@@ -217,7 +231,9 @@ function Billing(props) {
         }
       : {}),
     ...(filters.paymentMethods ? { payment_method: filters.paymentMethods } : {}),
-    total_amount: { $like: `%25${filters.totalInvoice || ''}%25` },
+    ...(filters.totalInvoice
+      ? { total_amount: { $like: `%25${filters.totalInvoice}%25` } }
+      : {}),
     $limit: pageSize,
     $offset: (page - 1) * pageSize,
   })
@@ -226,12 +242,12 @@ function Billing(props) {
     setLoading(true)
 
     billingSrc
-      .getInvoices(getReportParams())
-      .then(data => {
-        setDataSource(data.items || data)
+      .getInvoices(getInvoiceParams())
+      .then(result => {
+        setDataSource(result.items || result)
         setPagination(prevState => ({
           ...prevState,
-          total: data.pagination?.total || 0,
+          total: result.pagination?.total || 0,
         }))
       })
       .catch(_ => message.error('Error al cargar facturas'))
@@ -261,18 +277,13 @@ function Billing(props) {
     }
   }, [loading, dataSource])
 
-  const handlerDeleteRowOld = async row => {    
+  const handlerDeleteRowOld = async row => {
     try {     
       setLoading(true)      
       billingSrc
             .cancelInvoice({ document_id: row.id })
             .then(_ => {
-              if (JSON.stringify(filters) === JSON.stringify(initFilters.current)) {
-                loadData()
-              } else {
-                setFilters(initFilters.current)
-              }
-  
+              loadData()
               message.success('Factura anulada exitosamente')
             })
             .catch(error => showErrors(error))
@@ -312,7 +323,11 @@ function Billing(props) {
 
   const setSearchFilters = field => value => {
     const nextValue =
-      field === 'created_at' ? value || null : value === undefined || value === null ? '' : value
+      field === 'created_at'
+        ? value || null
+        : value === undefined || value === null
+        ? ''
+        : value
     setFilters(prevState => ({ ...prevState, [field]: nextValue }))
     setPagination(prevState => ({ ...prevState, current: 1 }))
   }
@@ -366,15 +381,7 @@ function Billing(props) {
           permissions={permissions.FACTURACION}
         />
       </div>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0,
-          overflow: 'hidden',
-        }}
-      >
+      <div style={contentStyle}>
         <BillingTable
           dataSource={dataSource}
           filters={filters}
