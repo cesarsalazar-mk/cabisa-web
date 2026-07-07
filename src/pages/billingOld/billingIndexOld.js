@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from 'react'
 import moment from 'moment'
 import HeaderPage from '../../components/HeaderPage'
 import BillingTable from './components/BillingTableOld'
@@ -16,6 +16,21 @@ import {
 
 
 const { TextArea } = Input;
+
+const defaultPagination = {
+  current: 1,
+  pageSize: 10,
+  total: 0,
+}
+
+const CONTENT_PADDING_BOTTOM = 24
+
+function getAvailablePageHeight(pageTop) {
+  const footer = document.querySelector('.ant-layout-footer')
+  const footerHeight = footer?.getBoundingClientRect().height || 30
+
+  return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
+}
 
 export function getDetailData(data) {
   const getParentProduct = (products, childProduct) => {    
@@ -118,18 +133,19 @@ export function getDetailData(data) {
 }
 
 function Billing(props) {
-  
+  const pageRef = useRef(null)
+  const [pageHeight, setPageHeight] = useState(null)
   const initFilters = useRef()
 
   if (!initFilters.current) {
     initFilters.current = {
       id: '',
       document_number: '',
-      name:'',
-      description:'',
+      name: '',
+      description: '',
       related_internal_document_id: '',
       nit: '',
-      created_at: '',
+      created_at: null,
       serviceTypes: '',
       paymentMethods: '',
       totalInvoice: '',
@@ -141,9 +157,11 @@ function Billing(props) {
   const [loading, setLoading] = useState(false)
   const [loadingBill, setLoadingBill] = useState(false)
   const [visible, setVisible] = useState(false)
-  const [dataSource, setDataSource] = useState(false)
+  const [dataSource, setDataSource] = useState([])
   const [detailInvoiceData, setDetailInvoiceData] = useState(false)
   const [filters, setFilters] = useState(initFilters.current)
+  const [filtersResetKey, setFiltersResetKey] = useState(0)
+  const [pagination, setPagination] = useState(defaultPagination)
   const [paymentMethodsOptionsList, setPaymentMethodsOptionsList] = useState([])
   const [
     stakeholderTypesOptionsList,
@@ -179,32 +197,69 @@ function Billing(props) {
       .finally(() => setLoading(false))
   }, [])
 
+  const getReportParams = (
+    page = pagination.current,
+    pageSize = pagination.pageSize
+  ) => ({
+    system_invoice: true,
+    related_internal_document_id: {
+      $like: `%25${filters.related_internal_document_id || ''}%25`,
+    },
+    id: { $like: `%25${filters.id || ''}%25` },
+    name: { $like: `%25${filters.name || ''}%25` },
+    description: { $like: `%25${filters.description || ''}%25` },
+    nit: { $like: `%25${filters.nit || ''}%25` },
+    ...(filters.created_at
+      ? {
+          created_at: {
+            $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25`,
+          },
+        }
+      : {}),
+    ...(filters.paymentMethods ? { payment_method: filters.paymentMethods } : {}),
+    total_amount: { $like: `%25${filters.totalInvoice || ''}%25` },
+    $limit: pageSize,
+    $offset: (page - 1) * pageSize,
+  })
+
   const loadData = useCallback(() => {
     setLoading(true)
-    let filterParams = {
-      related_internal_document_id: { $like: `%25${filters.related_internal_document_id}%25` }, // Nro nota de servicio
-      id: { $like: `%25${filters.id}%25` }, // Nro de Serie   
-      name: { $like: `%25${filters.name}%25` }, // nombre cliente   
-      description: { $like: `%25${filters.description}%25` }, // description
-      nit: { $like: `%25${filters.nit}%25` },
-      created_at: filters.created_at
-        ? { $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25` }
-        : '',
-      payment_method: filters.paymentMethods,
-      total_amount: { $like: `%25${filters.totalInvoice}%25` },
-    }
 
-  
     billingSrc
-      .getInvoices(filterParams)
-      .then(data => setDataSource((data.items || data).filter(item => item.document_number === null)))
+      .getInvoices(getReportParams())
+      .then(data => {
+        setDataSource(data.items || data)
+        setPagination(prevState => ({
+          ...prevState,
+          total: data.pagination?.total || 0,
+        }))
+      })
       .catch(_ => message.error('Error al cargar facturas'))
       .finally(() => setLoading(false))
-  }, [filters])
+  }, [filters, pagination.current, pagination.pageSize])
 
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useLayoutEffect(() => {
+    const updatePageHeight = () => {
+      if (!pageRef.current) return
+
+      const { top } = pageRef.current.getBoundingClientRect()
+      setPageHeight(getAvailablePageHeight(top))
+    }
+
+    updatePageHeight()
+    window.addEventListener('resize', updatePageHeight)
+
+    const frameId = requestAnimationFrame(updatePageHeight)
+
+    return () => {
+      window.removeEventListener('resize', updatePageHeight)
+      cancelAnimationFrame(frameId)
+    }
+  }, [loading, dataSource])
 
   const handlerDeleteRowOld = async row => {    
     try {     
@@ -255,8 +310,26 @@ function Billing(props) {
     // window.open(urlDocument, '_blank').focus();
   }
 
-  const setSearchFilters = field => value =>
-    setFilters(prevState => ({ ...prevState, [field]: value }))
+  const setSearchFilters = field => value => {
+    const nextValue =
+      field === 'created_at' ? value || null : value === undefined || value === null ? '' : value
+    setFilters(prevState => ({ ...prevState, [field]: nextValue }))
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+  }
+
+  const clearFilters = () => {
+    setFilters({ ...initFilters.current, created_at: null })
+    setPagination(prevState => ({ ...prevState, current: 1 }))
+    setFiltersResetKey(prevState => prevState + 1)
+  }
+
+  const handlePaginationChange = (page, pageSize) => {
+    setPagination(prevState => ({
+      ...prevState,
+      current: page,
+      pageSize,
+    }))
+  }
 
   const newBill = () => props.history.push('/FactViewOld')
 
@@ -275,24 +348,50 @@ function Billing(props) {
   }
 
   return (
-    <>
-      <HeaderPage
-        titleButton={'Factura Manual Nueva'}
-        title={'Facturación Sistema'}
-        showDrawer={newBill}
-        permissions={permissions.FACTURACION}
-      />
-      <BillingTable
-        dataSource={dataSource}
-        showDetail={showDetail}
-        handleFiltersChange={setSearchFilters}
-        paymentMethodsOptionsList={paymentMethodsOptionsList}
-        handlerDeleteRowOld={handlerDeleteRowOld}
-        handlerShowDocument={handlerShowDocument}
-        handlerPrintDocument={handlerPrintDocument}
-        loading={loading}
-        isAdmin={isAdmin}
-      />
+    <div
+      ref={pageRef}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: pageHeight ?? undefined,
+        maxHeight: pageHeight ?? undefined,
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ flexShrink: 0 }}>
+        <HeaderPage
+          titleButton={'Factura Manual Nueva'}
+          title={'Facturación Sistema'}
+          showDrawer={newBill}
+          permissions={permissions.FACTURACION}
+        />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+        }}
+      >
+        <BillingTable
+          dataSource={dataSource}
+          filters={filters}
+          filtersResetKey={filtersResetKey}
+          showDetail={showDetail}
+          handleFiltersChange={setSearchFilters}
+          onClearFilters={clearFilters}
+          paymentMethodsOptionsList={paymentMethodsOptionsList}
+          handlerDeleteRowOld={handlerDeleteRowOld}
+          handlerShowDocument={handlerShowDocument}
+          handlerPrintDocument={handlerPrintDocument}
+          loading={loading}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+          isAdmin={isAdmin}
+        />
+      </div>
       <DetailBilling
         closable={closeDetail}
         visible={visible}
@@ -361,7 +460,7 @@ function Billing(props) {
               </Col>
             </Row>          
         </Modal>
-    </>
+    </div>
   )
 }
 export default Billing
