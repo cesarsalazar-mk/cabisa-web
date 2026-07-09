@@ -17,14 +17,21 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import DownOutlined from '@ant-design/icons/lib/icons/DownOutlined'
 import RightOutlined from '@ant-design/icons/lib/icons/RightOutlined'
 import Tag from '../../../../components/Tag'
-import { numberFormat, formatPhone, sortColumnString, canViewRestrictedReportCards } from '../../../../utils'
+import {
+  numberFormat,
+  formatPhone,
+  sortColumnString,
+  canViewRestrictedReportCards,
+} from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
+const { RangePicker } = DatePicker
 
 const debtStatusOptions = [
   { value: '', label: 'Todo' },
   { value: 'WITH_DEBT', label: 'Con deuda' },
+  { value: 'WITH_DEBT_OVER_120', label: 'Con deuda +120 dias' },
   { value: 'WITHOUT_DEBT', label: 'Sin deuda' },
 ]
 
@@ -102,6 +109,14 @@ const tablePaginationStyle = {
   flexShrink: 0,
   marginTop: 12,
   textAlign: 'right',
+}
+
+const isOverdueDebt120 = record => Boolean(Number(record?.has_overdue_debt_120))
+
+const getClientAccountRowClassName = record => {
+  if (isOverdueDebt120(record)) return 'client-account-row-overdue-120'
+  if (!record?.has_debt) return 'client-account-row-ok'
+  return ''
 }
 
 function SummaryCard({ title, primary, secondary, tertiary }) {
@@ -201,7 +216,8 @@ function ReportClientTable(props) {
       dataIndex: 'name',
       key: 'name',
       sorter: (a, b) => sortColumnString(a, b, 'name'),
-      sortOrder: sortedInfo && sortedInfo.columnKey === 'name' && sortedInfo.order,
+      sortOrder:
+        sortedInfo && sortedInfo.columnKey === 'name' && sortedInfo.order,
       ellipsis: true,
       render: text => <span>{text}</span>,
     },
@@ -240,8 +256,8 @@ function ReportClientTable(props) {
       render: (_, record) => (
         <span
           style={{
-            fontWeight: record.has_debt ? 600 : 400,
-            color: record.has_debt ? '#cf1322' : 'inherit',
+            fontWeight: isOverdueDebt120(record) ? 600 : 400,
+            color: isOverdueDebt120(record) ? '#cf1322' : 'inherit',
           }}
         >
           {formatAmount(record.credit_balance)}
@@ -263,30 +279,44 @@ function ReportClientTable(props) {
               <SummaryCard
                 title='Clientes con deuda'
                 primary={`${summary?.clients_with_debt || 0} clientes`}
-                secondary={`Facturado: ${formatAmount(summary?.total_debt_charge)}`}
-                tertiary={`Pagado: ${formatAmount(summary?.total_debt_paid)} | Saldo: ${formatAmount(summary?.total_debt_balance)}`}
+                secondary={`Facturado: ${formatAmount(
+                  summary?.total_debt_charge
+                )}`}
+                tertiary={`Pagado: ${formatAmount(
+                  summary?.total_debt_paid
+                )} | Saldo: ${formatAmount(summary?.total_debt_balance)}`}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
                 title='Clientes sin deuda'
                 primary={`${summary?.clients_without_debt || 0} clientes`}
-                secondary={`Facturado: ${formatAmount(summary?.total_without_debt_charge)}`}
-                tertiary={`Pagado: ${formatAmount(summary?.total_without_debt_paid)}`}
+                secondary={`Facturado: ${formatAmount(
+                  summary?.total_without_debt_charge
+                )}`}
+                tertiary={`Pagado: ${formatAmount(
+                  summary?.total_without_debt_paid
+                )}`}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
                 title='Total cargos'
                 primary={formatAmount(summary?.total_credit)}
-                secondary={`${summary?.total_clients || 0} clientes en el reporte`}
+                secondary={`${
+                  summary?.total_clients || 0
+                } clientes en el reporte`}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
                 title='Total pagado'
                 primary={formatAmount(summary?.total_paid_credit)}
-                secondary={`Con deuda: ${formatAmount(summary?.total_debt_paid)} + Sin deuda: ${formatAmount(summary?.total_without_debt_paid)}`}
+                secondary={`Con deuda: ${formatAmount(
+                  summary?.total_debt_paid
+                )} + Sin deuda: ${formatAmount(
+                  summary?.total_without_debt_paid
+                )}`}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
@@ -302,17 +332,13 @@ function ReportClientTable(props) {
       <div style={staticSectionStyle}>
         <Row gutter={16} style={{ marginTop: 15 }}>
           <Col xs={24} sm={12} md={5} lg={5}>
-            <DatePicker
+            <RangePicker
               key={`created-at-${props.filtersResetKey}`}
               allowClear
               style={{ width: '100%', height: '40px', borderRadius: '8px' }}
-              placeholder='Fecha de creacion'
+              placeholder={['Fecha inicio', 'Fecha fin']}
               format='DD-MM-YYYY'
-              value={
-                props.filters?.created_at
-                  ? moment(props.filters.created_at)
-                  : null
-              }
+              value={props.filters?.created_at}
               onChange={props.handleFiltersChange('created_at')}
             />
           </Col>
@@ -363,10 +389,10 @@ function ReportClientTable(props) {
                 <Option key={option.value || 'all'} value={option.value}>
                   {option.value === '' ? (
                     <AntTag color='gray'>{option.label}</AntTag>
-                  ) : option.value === 'WITH_DEBT' ? (
-                    <AntTag color='red'>{option.label}</AntTag>
-                  ) : (
+                  ) : option.value === 'WITHOUT_DEBT' ? (
                     <AntTag color='green'>{option.label}</AntTag>
+                  ) : (
+                    <AntTag color='red'>{option.label}</AntTag>
                   )}
                 </Option>
               ))}
@@ -409,12 +435,8 @@ function ReportClientTable(props) {
               pagination={false}
               loading={props.loading}
               rowKey='id'
+              rowClassName={getClientAccountRowClassName}
               onChange={handleChange}
-              onRow={record => ({
-                style: {
-                  backgroundColor: record.has_debt ? '#fff1f0' : '#f6ffed',
-                },
-              })}
               expandable={{
                 expandedRowRender: record => (
                   <div className={'text-left'}>
@@ -423,8 +445,7 @@ function ReportClientTable(props) {
                       {record.address !== null ? record.address : ''}{' '}
                     </p>
                     <p>
-                      <b>Email: </b>{' '}
-                      {record.email !== null ? record.email : ''}{' '}
+                      <b>Email: </b> {record.email !== null ? record.email : ''}{' '}
                     </p>
                     <p>
                       <b>Telefono: </b>{' '}

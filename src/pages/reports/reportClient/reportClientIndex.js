@@ -43,6 +43,19 @@ function getAvailablePageHeight(pageTop) {
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
 }
 
+function getClientDateRangeFilter(dateRange) {
+  if (!dateRange) return {}
+
+  return {
+    start_date: {
+      $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
+    },
+    end_date: {
+      $lte: moment(dateRange[1]).format('YYYY-MM-DD'),
+    },
+  }
+}
+
 function ReportClient() {
   const pageRef = useRef(null)
   const [pageHeight, setPageHeight] = useState(null)
@@ -50,7 +63,7 @@ function ReportClient() {
 
   if (!initFilters.current) {
     initFilters.current = {
-      created_at: '',
+      created_at: null,
       name: '',
       stakeholder_type: '',
       debt_status: '',
@@ -72,9 +85,7 @@ function ReportClient() {
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    created_at: filters.created_at
-      ? { $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25` }
-      : '',
+    ...getClientDateRangeFilter(filters.created_at),
     name: { $like: `%25${filters.name}%25` },
     stakeholder_type: filters.stakeholder_type,
     ...(filters.debt_status ? { debt_status: filters.debt_status } : {}),
@@ -145,7 +156,7 @@ function ReportClient() {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current })
+    setFilters({ ...initFilters.current, created_at: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }

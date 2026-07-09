@@ -518,6 +518,12 @@ input:-webkit-autofill:focus {
   cursor: pointer;
   position: relative;
 }
+.CustomTableClass tr.client-account-row-overdue-120 > td {
+  background-color: #fff1f0 !important;
+}
+.CustomTableClass tr.client-account-row-ok > td {
+  background-color: #f6ffed !important;
+}
 /*END CUSTOM TABLE*/
 
 /*LOGIN STYLES*/
