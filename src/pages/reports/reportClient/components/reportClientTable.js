@@ -31,6 +31,7 @@ const { RangePicker } = DatePicker
 const debtStatusOptions = [
   { value: '', label: 'Todo' },
   { value: 'WITH_DEBT', label: 'Con deuda' },
+  { value: 'WITH_DEBT_OVER_120', label: 'Con deuda +120 dias' },
   { value: 'WITHOUT_DEBT', label: 'Sin deuda' },
 ]
 
@@ -108,6 +109,14 @@ const tablePaginationStyle = {
   flexShrink: 0,
   marginTop: 12,
   textAlign: 'right',
+}
+
+const isOverdueDebt120 = record => Boolean(Number(record?.has_overdue_debt_120))
+
+const getClientAccountRowClassName = record => {
+  if (isOverdueDebt120(record)) return 'client-account-row-overdue-120'
+  if (!record?.has_debt) return 'client-account-row-ok'
+  return ''
 }
 
 function SummaryCard({ title, primary, secondary, tertiary }) {
@@ -247,8 +256,8 @@ function ReportClientTable(props) {
       render: (_, record) => (
         <span
           style={{
-            fontWeight: record.has_debt ? 600 : 400,
-            color: record.has_debt ? '#cf1322' : 'inherit',
+            fontWeight: isOverdueDebt120(record) ? 600 : 400,
+            color: isOverdueDebt120(record) ? '#cf1322' : 'inherit',
           }}
         >
           {formatAmount(record.credit_balance)}
@@ -380,10 +389,10 @@ function ReportClientTable(props) {
                 <Option key={option.value || 'all'} value={option.value}>
                   {option.value === '' ? (
                     <AntTag color='gray'>{option.label}</AntTag>
-                  ) : option.value === 'WITH_DEBT' ? (
-                    <AntTag color='red'>{option.label}</AntTag>
-                  ) : (
+                  ) : option.value === 'WITHOUT_DEBT' ? (
                     <AntTag color='green'>{option.label}</AntTag>
+                  ) : (
+                    <AntTag color='red'>{option.label}</AntTag>
                   )}
                 </Option>
               ))}
@@ -426,12 +435,8 @@ function ReportClientTable(props) {
               pagination={false}
               loading={props.loading}
               rowKey='id'
+              rowClassName={getClientAccountRowClassName}
               onChange={handleChange}
-              onRow={record => ({
-                style: {
-                  backgroundColor: record.has_debt ? '#fff1f0' : '#f6ffed',
-                },
-              })}
               expandable={{
                 expandedRowRender: record => (
                   <div className={'text-left'}>
