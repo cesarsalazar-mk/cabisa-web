@@ -12,7 +12,7 @@ import {
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import Tag from '../../../../components/Tag'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 import { reportSalesItemTypes, salesCategoryOptions } from '../../../../commons/types'
 
 const { Search } = Input
@@ -262,55 +262,57 @@ function ReportSalesProductTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Producto mas vendido'
-            label={formatTopItemLabel(topProduct)}
-            quantity={topProduct?.product_quantity}
-            amount={topProduct?.total_amount}
-          />
-        </Col>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Servicio mas vendido'
-            label={formatTopItemLabel(topService)}
-            quantity={topService?.product_quantity}
-            amount={topService?.total_amount}
-          />
-        </Col>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Equipo mas vendido'
-            label={formatTopItemLabel(topEquipment)}
-            quantity={topEquipment?.product_quantity}
-            amount={topEquipment?.total_amount}
-          />
-        </Col>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Total vendido en productos'
-            quantity={summary?.products_total_quantity}
-            amount={summary?.products_total_amount}
-          />
-        </Col>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Total vendido en servicios'
-            quantity={summary?.services_total_quantity}
-            amount={summary?.services_total_amount}
-          />
-        </Col>
-        <Col {...summaryCardCol} style={cardColStyle}>
-          <SummaryCard
-            title='Total vendido en equipos'
-            quantity={summary?.equipment_total_quantity}
-            amount={summary?.equipment_total_amount}
-          />
-        </Col>
-      </Row>
-      </div>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Producto mas vendido'
+                label={formatTopItemLabel(topProduct)}
+                quantity={topProduct?.product_quantity}
+                amount={topProduct?.total_amount}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Servicio mas vendido'
+                label={formatTopItemLabel(topService)}
+                quantity={topService?.product_quantity}
+                amount={topService?.total_amount}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Equipo mas vendido'
+                label={formatTopItemLabel(topEquipment)}
+                quantity={topEquipment?.product_quantity}
+                amount={topEquipment?.total_amount}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total vendido en productos'
+                quantity={summary?.products_total_quantity}
+                amount={summary?.products_total_amount}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total vendido en servicios'
+                quantity={summary?.services_total_quantity}
+                amount={summary?.services_total_amount}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total vendido en equipos'
+                quantity={summary?.equipment_total_quantity}
+                amount={summary?.equipment_total_amount}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>

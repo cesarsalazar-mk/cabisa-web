@@ -17,7 +17,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import DownOutlined from '@ant-design/icons/lib/icons/DownOutlined'
 import RightOutlined from '@ant-design/icons/lib/icons/RightOutlined'
 import Tag from '../../../../components/Tag'
-import { numberFormat, formatPhone, sortColumnString } from '../../../../utils'
+import { numberFormat, formatPhone, sortColumnString, canViewRestrictedReportCards } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -256,46 +256,50 @@ function ReportClientTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Clientes con deuda'
-              primary={`${summary?.clients_with_debt || 0} clientes`}
-              secondary={`Facturado: ${formatAmount(summary?.total_debt_charge)}`}
-              tertiary={`Pagado: ${formatAmount(summary?.total_debt_paid)} | Saldo: ${formatAmount(summary?.total_debt_balance)}`}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Clientes sin deuda'
-              primary={`${summary?.clients_without_debt || 0} clientes`}
-              secondary={`Facturado: ${formatAmount(summary?.total_without_debt_charge)}`}
-              tertiary={`Pagado: ${formatAmount(summary?.total_without_debt_paid)}`}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total cargos'
-              primary={formatAmount(summary?.total_credit)}
-              secondary={`${summary?.total_clients || 0} clientes en el reporte`}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total pagado'
-              primary={formatAmount(summary?.total_paid_credit)}
-              secondary={`Con deuda: ${formatAmount(summary?.total_debt_paid)} + Sin deuda: ${formatAmount(summary?.total_without_debt_paid)}`}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Balance total'
-              primary={formatAmount(summary?.total_credit_balance)}
-            />
-          </Col>
-        </Row>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Clientes con deuda'
+                primary={`${summary?.clients_with_debt || 0} clientes`}
+                secondary={`Facturado: ${formatAmount(summary?.total_debt_charge)}`}
+                tertiary={`Pagado: ${formatAmount(summary?.total_debt_paid)} | Saldo: ${formatAmount(summary?.total_debt_balance)}`}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Clientes sin deuda'
+                primary={`${summary?.clients_without_debt || 0} clientes`}
+                secondary={`Facturado: ${formatAmount(summary?.total_without_debt_charge)}`}
+                tertiary={`Pagado: ${formatAmount(summary?.total_without_debt_paid)}`}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total cargos'
+                primary={formatAmount(summary?.total_credit)}
+                secondary={`${summary?.total_clients || 0} clientes en el reporte`}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total pagado'
+                primary={formatAmount(summary?.total_paid_credit)}
+                secondary={`Con deuda: ${formatAmount(summary?.total_debt_paid)} + Sin deuda: ${formatAmount(summary?.total_without_debt_paid)}`}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Balance total'
+                primary={formatAmount(summary?.total_credit_balance)}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
+      <div style={staticSectionStyle}>
         <Row gutter={16} style={{ marginTop: 15 }}>
           <Col xs={24} sm={12} md={5} lg={5}>
             <DatePicker
