@@ -16,7 +16,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
 import { permissions } from '../../../../commons/types'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 import ReportInventoryDetailDrawer from './reportInventoryDetailDrawer'
 
 const { Search } = Input
@@ -238,22 +238,24 @@ function ReportInventoryTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total articulos del Inventario'
-              value={summary?.total_items ?? 0}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Valor total de Inventario'
-              value={formatAmount(summary?.total_value)}
-            />
-          </Col>
-        </Row>
-      </div>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total articulos del Inventario'
+                value={summary?.total_items ?? 0}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Valor total de Inventario'
+                value={formatAmount(summary?.total_value)}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>

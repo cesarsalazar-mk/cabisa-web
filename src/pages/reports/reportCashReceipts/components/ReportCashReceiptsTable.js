@@ -16,7 +16,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import moment from 'moment'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 import ActionOptions from '../../../../components/actionOptions'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 
@@ -285,43 +285,45 @@ function ReportCashReceiptsTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total facturado'
-              value={formatAmount(summary?.total_billed)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total pagado'
-              value={formatAmount(summary?.total_paid)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Balance'
-              value={formatAmount(summary?.total_balance)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Cantidad de facturas'
-              value={summary?.total_invoices ?? 0}
-            />
-          </Col>
-        </Row>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total facturado'
+                value={formatAmount(summary?.total_billed)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total pagado'
+                value={formatAmount(summary?.total_paid)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Balance'
+                value={formatAmount(summary?.total_balance)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Cantidad de facturas'
+                value={summary?.total_invoices ?? 0}
+              />
+            </Col>
+          </Row>
 
-        <Collapse style={{ marginTop: 15 }}>
-          <Panel header='Detalle facturacion electronica' key='electronic'>
-            <DetailSummaryRow title='Electronica' data={summary?.electronic} />
-          </Panel>
-          <Panel header='Detalle facturacion del sistema' key='system'>
-            <DetailSummaryRow title='Sistema' data={summary?.system} />
-          </Panel>
-        </Collapse>
-      </div>
+          <Collapse style={{ marginTop: 15 }}>
+            <Panel header='Detalle facturacion electronica' key='electronic'>
+              <DetailSummaryRow title='Electronica' data={summary?.electronic} />
+            </Panel>
+            <Panel header='Detalle facturacion del sistema' key='system'>
+              <DetailSummaryRow title='Sistema' data={summary?.system} />
+            </Panel>
+          </Collapse>
+        </div>
+      )}
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>

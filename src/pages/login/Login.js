@@ -53,6 +53,7 @@ function Login() {
                 const profileSettings = {
                   token: user.signInUserSession.accessToken.jwtToken,
                   userName: user.attributes.name,
+                  cognitoUsername: user.username,
                   userPermissions: userData?.permissions || [],
                   email: user.attributes.email,
                   rol_id: userData?.rol_id,

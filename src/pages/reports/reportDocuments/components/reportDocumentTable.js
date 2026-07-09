@@ -16,7 +16,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import moment from 'moment'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -230,40 +230,42 @@ function ReportDocumentTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total facturado'
-              value={formatAmount(summary?.approved_total)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Facturas aprobadas'
-              value={summary?.approved_count ?? 0}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total anulado'
-              value={formatAmount(summary?.cancelled_total)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Facturas anuladas'
-              value={summary?.cancelled_count ?? 0}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Cantidad total de facturas'
-              value={summary?.total_invoices ?? 0}
-            />
-          </Col>
-        </Row>
-      </div>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total facturado'
+                value={formatAmount(summary?.approved_total)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Facturas aprobadas'
+                value={summary?.approved_count ?? 0}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total anulado'
+                value={formatAmount(summary?.cancelled_total)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Facturas anuladas'
+                value={summary?.cancelled_count ?? 0}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Cantidad total de facturas'
+                value={summary?.total_invoices ?? 0}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>

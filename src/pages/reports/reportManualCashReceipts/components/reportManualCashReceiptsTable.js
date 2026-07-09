@@ -15,7 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import moment from 'moment'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -231,34 +231,36 @@ function ReportManualCashReceiptsTable(props) {
 
   return (
     <div style={pageLayoutStyle}>
-      <div style={staticSectionStyle}>
-        <Row gutter={[16, 16]} align='stretch'>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total'
-              value={formatAmount(summary?.total_billed)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Total pagado'
-              value={formatAmount(summary?.total_paid)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Balance'
-              value={formatAmount(summary?.total_balance)}
-            />
-          </Col>
-          <Col {...summaryCardCol} style={cardColStyle}>
-            <SummaryCard
-              title='Cantidad de recibos'
-              value={summary?.total_receipts ?? 0}
-            />
-          </Col>
-        </Row>
-      </div>
+      {canViewRestrictedReportCards() && (
+        <div style={staticSectionStyle}>
+          <Row gutter={[16, 16]} align='stretch'>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total'
+                value={formatAmount(summary?.total_billed)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Total pagado'
+                value={formatAmount(summary?.total_paid)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Balance'
+                value={formatAmount(summary?.total_balance)}
+              />
+            </Col>
+            <Col {...summaryCardCol} style={cardColStyle}>
+              <SummaryCard
+                title='Cantidad de recibos'
+                value={summary?.total_receipts ?? 0}
+              />
+            </Col>
+          </Row>
+        </div>
+      )}
 
       <div style={staticSectionStyle}>
         <Row gutter={16} className={'margin-top-15'}>

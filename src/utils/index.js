@@ -1,6 +1,7 @@
 import moment from 'moment'
 import { message } from 'antd'
 import { Cache } from 'aws-amplify'
+import { RESTRICTED_REPORT_CARD_ALLOWED_USERS } from '../commons/restrictedReportUsers'
 
 export const roundNumber = input => {
   const num = Number(input)
@@ -41,6 +42,43 @@ export const validatePermissions = permissionId => {
     p => Number(p.id) === Number(permissionId)
   )    
   return action => currentPermission && currentPermission[action]
+}
+
+const normalizeUserIdentifier = value =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+
+const getSessionUserIdentifiers = session => {
+  const identifiers = new Set()
+
+  ;[session.cognitoUsername, session.userName].forEach(value => {
+    if (value) identifiers.add(normalizeUserIdentifier(value))
+  })
+
+  if (session.email) {
+    const email = String(session.email).trim().toLowerCase()
+    identifiers.add(normalizeUserIdentifier(email))
+
+    const localPart = email.split('@')[0]
+    const plusAlias = localPart.includes('+') ? localPart.split('+').pop() : null
+
+    if (plusAlias) identifiers.add(normalizeUserIdentifier(plusAlias))
+  }
+
+  return identifiers
+}
+
+export const canViewRestrictedReportCards = () => {
+  const session = Cache.getItem('currentSession')
+  if (!session) return false
+
+  const identifiers = getSessionUserIdentifiers(session)
+
+  return RESTRICTED_REPORT_CARD_ALLOWED_USERS.some(allowedUser =>
+    identifiers.has(normalizeUserIdentifier(allowedUser))
+  )
 }
 
 const getErrorData = error => {
