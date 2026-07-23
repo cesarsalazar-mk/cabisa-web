@@ -1,5 +1,4 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import moment from 'moment'
 import {
   Table,
   Col,
@@ -18,6 +17,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
+import { formatDateOnly } from '../../../../utils'
 import { formatPhone } from '../../../../utils'
 
 const { Search } = Input
@@ -134,7 +134,7 @@ function SalesTable(props) {
       dataIndex: 'start_date',
       key: 'start_date',
       render: text => (
-        <span>{text ? moment.utc(text).format('DD-MM-YYYY') : null}</span>
+        <span>{text ? formatDateOnly(text) : null}</span>
       ),
     },
     {

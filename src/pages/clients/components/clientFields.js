@@ -24,6 +24,7 @@ import {
   formatPhone,
   formatPhoneOnChange,
   numberFormat,
+  formatGuatemalaDate,
 } from '../../../utils'
 import { stakeholdersTypes, roles } from '../../../commons/types'
 import ClientsSrc from '../clientsSrc'
@@ -44,7 +45,7 @@ const getProjectColumns = ({
       dataIndex: 'created_at', // Field that is goint to be rendered
       key: 'created_at',
       render: text => (
-        <div>{text ? moment(text).format('DD-MM-YYYY') : null}</div>
+        <div>{formatGuatemalaDate(text) || null}</div>
       ),
     },
     {

@@ -1,5 +1,4 @@
 import React, { useState, useLayoutEffect, useRef } from 'react'
-import moment from 'moment'
 import {
   Card,
   Col,
@@ -17,6 +16,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import DownOutlined from '@ant-design/icons/lib/icons/DownOutlined'
 import RightOutlined from '@ant-design/icons/lib/icons/RightOutlined'
 import Tag from '../../../../components/Tag'
+import { formatGuatemalaDate } from '../../../../utils'
 import {
   numberFormat,
   formatPhone,
@@ -226,7 +226,7 @@ function ReportClientTable(props) {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 120,
-      render: text => <span>{moment(text).format('DD-MM-YYYY')}</span>,
+      render: text => <span>{formatGuatemalaDate(text)}</span>,
     },
     {
       title: 'Tipo',

@@ -14,8 +14,7 @@ import { FileAddOutlined } from '@ant-design/icons'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../components/Tag'
-import moment from 'moment'
-import { numberFormat } from '../../../utils'
+import { numberFormat, formatGuatemalaDate } from '../../../utils'
 
 const { Search } = Input
 const { getFormattedValue } = numberFormat()
@@ -155,9 +154,7 @@ function BillingManagementFelTable(props) {
       title: 'Fecha de facturacion',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: text => (
-        <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
-      ),
+      render: text => <span>{formatGuatemalaDate(text)}</span>,
     },
     {
       width: 120,

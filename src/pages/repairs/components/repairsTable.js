@@ -1,9 +1,9 @@
 import React from 'react'
-import moment from 'moment'
 import { Table, Col, Select, DatePicker, Row, Card, Tag as AntTag } from 'antd'
 import ActionOptions from '../../../components/actionOptions'
 import Tag from '../../../components/Tag'
 import { documentsStatus, permissions } from '../../../commons/types'
+import { formatDateOnly } from '../../../utils'
 
 const { Option } = Select
 
@@ -17,14 +17,14 @@ const getColumns = ({
     dataIndex: 'start_date', // Field that is goint to be rendered
     key: 'start_date',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : '',
+      text ? <span>{formatDateOnly(text)}</span> : '',
   },
   {
     title: 'Fecha Final',
     dataIndex: 'end_date', // Field that is goint to be rendered
     key: 'end_date',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : '',
+      text ? <span>{formatDateOnly(text)}</span> : '',
   },
   {
     title: 'Status',

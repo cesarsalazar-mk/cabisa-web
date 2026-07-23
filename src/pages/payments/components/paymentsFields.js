@@ -10,7 +10,6 @@ import {
   Collapse,
   Button,message
 } from 'antd'
-import moment from 'moment'
 import logoCabisa from '../../../assets/cabisa-logo.png'
 import { styleReceipt } from '../../receiptTemp/styleReceipt'
 import { receiptTemplate } from '../../receiptTemp/receiptTemplate'
@@ -23,6 +22,7 @@ import {
   showErrors,
   formatPhone,
   numberFormat,
+  formatGuatemalaDate,
 } from '../../../utils'
 import FooterButtons from '../../../components/FooterButtons'
 import { editableListInitRow } from '../../billing/components/billingFields'
@@ -190,7 +190,7 @@ function PaymentsFields({ detailData, ...props }) {
     if(invoiceData.payments.length > 0){      
       invoiceData.payments.forEach(items =>{      
         ticketItems += ` <tr class="service">
-                        <td class="tableitem"><p class="itemtext">&nbsp;&nbsp;${moment.utc(items.payment_date).format("DD-MM-YYYY")}</p></td>
+                        <td class="tableitem"><p class="itemtext">&nbsp;&nbsp;${formatGuatemalaDate(items.payment_date)}</p></td>
                         <td class="tableitem"><p class="itemtext">Q.${parseFloat(items.payment_amount).toFixed(2)}</p></td>
                         <td class="tableitem"><p class="itemtext">${paymentMethod(items.payment_method)}</p></td>
                         <td class="tableitem"><p class="itemtext">${items.related_external_document ? items.related_external_document : ''}</p></td>

@@ -6,11 +6,11 @@ import React, {
   useLayoutEffect,
 } from 'react'
 import { message } from 'antd'
-import moment from 'moment'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportDocumentTable from './components/reportDocumentTable'
 import { permissions, documentsPaymentMethods } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
+import { getDateRangeFilter } from '../../../utils'
 
 const emptySummary = {
   total_invoices: 0,
@@ -33,19 +33,6 @@ function getAvailablePageHeight(pageTop) {
   const footerHeight = footer?.getBoundingClientRect().height || 30
 
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
-}
-
-function getDateRangeFilterReport(dateRange) {
-  if (!dateRange) return {}
-
-  return {
-    start_date: {
-      $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
-    },
-    end_date: {
-      $lte: moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD'),
-    },
-  }
 }
 
 function ReportDocuments() {
@@ -89,7 +76,10 @@ function ReportDocuments() {
     },
     name: { $like: `%25${filters.name || ''}%25` },
     document_number: { $like: `%25${filters.document_number || ''}%25` },
-    ...getDateRangeFilterReport(filters.created_at),
+    ...getDateRangeFilter(filters.created_at, {
+      startKey: 'updated_from',
+      endKey: 'updated_to',
+    }),
     payment_method: filters.paymentMethods,
     total_amount: { $like: `%25${filters.totalInvoice || ''}%25` },
     ...(withPagination

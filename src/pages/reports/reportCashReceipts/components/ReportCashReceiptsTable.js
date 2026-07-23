@@ -16,7 +16,12 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import moment from 'moment'
-import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import {
+  numberFormat,
+  canViewRestrictedReportCards,
+  formatGuatemalaDate,
+  parseGuatemalaDate,
+} from '../../../../utils'
 import ActionOptions from '../../../../components/actionOptions'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 
@@ -205,7 +210,7 @@ function ReportCashReceiptsTable(props) {
       dataIndex: 'created_at',
       key: 'created_at',
       render: text => (
-        <span>{text ? moment.utc(text).format('DD-MM-YYYY') : ''}</span>
+        <span>{formatGuatemalaDate(text)}</span>
       ),
     },
     {
@@ -216,7 +221,7 @@ function ReportCashReceiptsTable(props) {
       render: (_, record) => (
         <span>
           {record.created_at
-            ? moment.utc().diff(moment(record.created_at), 'days')
+            ? moment().startOf('day').diff(parseGuatemalaDate(record.created_at).startOf('day'), 'days')
             : ''}
         </span>
       ),

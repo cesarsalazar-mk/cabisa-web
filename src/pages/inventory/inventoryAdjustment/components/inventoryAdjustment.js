@@ -1,12 +1,11 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react'
-import moment from 'moment'
 import { useHistory } from 'react-router'
 import { message } from 'antd'
 import ActionOptions from '../../../../components/actionOptions'
 import InventoryAdjustmentTable from './inventoryAdjustmentTable'
 import InventoryAdjustmentDrawer from './inventoryAdjustmentDrawer'
 import inventorySrc from '../../inventorySrc'
-import { validateRole } from '../../../../utils'
+import { validateRole, formatGuatemalaDate, getSingleDateFilter } from '../../../../utils'
 import { permissions, roles } from '../../../../commons/types'
 
 const getColumns = ({ EditRow }) => [
@@ -15,7 +14,7 @@ const getColumns = ({ EditRow }) => [
     dataIndex: 'created_at', // Field that is goint to be rendered
     key: 'created_at',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : '',
+      text ? <span>{formatGuatemalaDate(text)}</span> : '',
   },
   {
     title: '',
@@ -56,9 +55,7 @@ function InventoryAdjustmentComponent() {
 
     inventorySrc
       .getAdjustments({
-        created_at: filters.created_at
-          ? { $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25` }
-          : '',
+        ...getSingleDateFilter(filters.created_at),
       })
       .then(data => setDataSource(data))
       .catch(_ => message.error('Error al cargar facturas'))

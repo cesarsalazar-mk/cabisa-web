@@ -14,8 +14,7 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
-import moment from 'moment'
-import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards, formatGuatemalaDate } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -172,7 +171,7 @@ function ReportManualCashReceiptsTable(props) {
       dataIndex: 'created_at',
       key: 'created_at',
       render: text => (
-        <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
+        <span>{formatGuatemalaDate(text)}</span>
       ),
     },
     {

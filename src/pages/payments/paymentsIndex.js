@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from 'react'
-import moment from 'moment'
 import HeaderPage from '../../components/HeaderPage'
 import PaymentsTable from './components/paymentsTable'
 import PaymentsDetail from './components/paymentsDetail'
@@ -7,6 +6,7 @@ import PaymentsSrc from './paymentsSrc'
 import { message } from 'antd'
 import { documentsStatus, permissions } from '../../commons/types'
 import { getDetailData } from '../billing/billingIndex'
+import { getSingleDateFilter } from '../../utils'
 
 const defaultPagination = {
   current: 1,
@@ -90,13 +90,7 @@ function Payments() {
     ...(filters.id ? { id: { $like: `%25${filters.id}%25` } } : {}),
     ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
     ...(filters.nit ? { nit: { $like: `%25${filters.nit}%25` } } : {}),
-    ...(filters.created_at
-      ? {
-          created_at: {
-            $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25`,
-          },
-        }
-      : {}),
+    ...getSingleDateFilter(filters.created_at),
     ...(filters.paymentMethods ? { payment_method: filters.paymentMethods } : {}),
     ...(filters.totalInvoice
       ? { total_amount: { $like: `%25${filters.totalInvoice}%25` } }

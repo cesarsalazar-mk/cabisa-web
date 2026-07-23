@@ -210,17 +210,85 @@ export const numberFormat = ({
   }
 }
 
-export const getDateRangeFilter = dateRange => {
-  if (!dateRange) return {}
+export const GUATEMALA_UTC_OFFSET_HOURS = 6
+export const GUATEMALA_UTC_OFFSET_MINUTES = GUATEMALA_UTC_OFFSET_HOURS * 60
+
+const STORED_DATETIME_FORMATS = [
+  'YYYY-MM-DD HH:mm:ss.SSS',
+  'YYYY-MM-DD HH:mm:ss',
+  moment.ISO_8601,
+]
+
+const parseStoredUtcDate = value => {
+  if (!value) return null
+
+  if (typeof value === 'string' && value.includes('T')) {
+    const iso = moment(value)
+    return iso.isValid() ? iso.utc() : null
+  }
+
+  const utcValue = moment.utc(value, STORED_DATETIME_FORMATS, true)
+
+  return utcValue.isValid() ? utcValue : null
+}
+
+export const parseGuatemalaDate = value => {
+  const utcValue = parseStoredUtcDate(value)
+
+  if (!utcValue) return null
+
+  return utcValue.clone().utcOffset(-GUATEMALA_UTC_OFFSET_MINUTES)
+}
+
+export const formatGuatemalaDate = (value, format = 'DD-MM-YYYY') => {
+  if (!value) return ''
+
+  const parsed = parseGuatemalaDate(value)
+
+  return parsed ? parsed.format(format) : ''
+}
+
+export const getDateRangeFilter = (
+  dateRange,
+  { startKey = 'start_date', endKey = 'end_date' } = {}
+) => {
+  if (!dateRange?.[0] || !dateRange?.[1]) return {}
 
   return {
-    start_date: {
+    [startKey]: {
       $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
     },
-    end_date: {
-      $lte: moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD'),
+    [endKey]: {
+      $lte: moment(dateRange[1]).format('YYYY-MM-DD'),
     },
   }
+}
+
+export const getSingleDateFilter = date => {
+  if (!date) return {}
+
+  const dateStr = moment(date).format('YYYY-MM-DD')
+
+  return {
+    start_date: { $gte: dateStr },
+    end_date: { $lte: dateStr },
+  }
+}
+
+export const formatDateOnly = (value, format = 'DD-MM-YYYY') => {
+  if (!value) return ''
+
+  const parsed = moment(
+    value,
+    ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss.SSS', 'YYYY-MM-DD HH:mm:ss', moment.ISO_8601],
+    true
+  )
+
+  if (parsed.isValid()) {
+    return parsed.format(format)
+  }
+
+  return formatGuatemalaDate(value, format)
 }
 
 export const sortColumnString = (a, b, prop) =>

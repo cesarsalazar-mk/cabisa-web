@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from 'react'
-import moment from 'moment'
 import HeaderPage from '../../components/HeaderPage'
 import BillingTable from './components/BillingTableOld'
 import DetailBilling from './components/detailBillingOld'
 import billingSrc from './billingSrcOld'
 import { message,Modal,Row,Col,Input,Spin } from 'antd'
-import { getPercent, showErrors, roundNumber, validateRole } from '../../utils'
+import { getPercent, showErrors, roundNumber, validateRole, getDateRangeFilter } from '../../utils'
 import {
   stakeholdersTypes,
   permissions,
@@ -223,13 +222,7 @@ function Billing(props) {
       ? { description: { $like: `%25${filters.description}%25` } }
       : {}),
     ...(filters.nit ? { nit: { $like: `%25${filters.nit}%25` } } : {}),
-    ...(filters.created_at
-      ? {
-          created_at: {
-            $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25`,
-          },
-        }
-      : {}),
+    ...getDateRangeFilter(filters.created_at),
     ...(filters.paymentMethods ? { payment_method: filters.paymentMethods } : {}),
     ...(filters.totalInvoice
       ? { total_amount: { $like: `%25${filters.totalInvoice}%25` } }

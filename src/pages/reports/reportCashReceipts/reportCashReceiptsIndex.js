@@ -6,7 +6,6 @@ import React, {
   useLayoutEffect,
 } from 'react'
 import { message } from 'antd'
-import moment from 'moment'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportCashReceiptsTable from './components/ReportCashReceiptsTable'
 import { permissions } from '../../../commons/types'
@@ -14,6 +13,7 @@ import ReportsSrc from '../reportsSrc'
 import PaymentsSrc from '../../payments/paymentsSrc'
 import { getDetailData } from '../../billing/billingIndex'
 import PaymentsDetail from '../../payments/components/paymentsDetail'
+import { getDateRangeFilter } from '../../../utils'
 
 const emptySummary = {
   total_invoices: 0,
@@ -37,19 +37,6 @@ function getAvailablePageHeight(pageTop) {
   const footerHeight = footer?.getBoundingClientRect().height || 30
 
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
-}
-
-function getDateRangeFilterReport(dateRange) {
-  if (!dateRange) return {}
-
-  return {
-    start_date: {
-      $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
-    },
-    end_date: {
-      $lte: moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD'),
-    },
-  }
 }
 
 function ReportCashReceipts() {
@@ -101,7 +88,7 @@ function ReportCashReceipts() {
         $like: `%25${filters.related_internal_document_id || ''}%25`,
       },
       name: { $like: `%25${filters.name || ''}%25` },
-      ...getDateRangeFilterReport(filters.created_at),
+      ...getDateRangeFilter(filters.created_at),
       payment_method: filters.paymentMethods,
       credit_status: filters.creditStatus,
       ...(withPagination

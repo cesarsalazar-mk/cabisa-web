@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react'
-import moment from 'moment'
 import { useHistory } from 'react-router'
 import { message } from 'antd'
 import ActionOptions from '../../../../components/actionOptions'
@@ -7,7 +6,7 @@ import InventoryMovementTable from './inventoryMovementTable'
 import InventoryMovementDrawer from './inventoryMovementDrawer'
 import inventorySrc from '../../inventorySrc'
 import Tag from '../../../../components/Tag'
-import { showErrors, validateRole } from '../../../../utils'
+import { showErrors, validateRole, formatDateOnly } from '../../../../utils'
 import { permissions, documentsStatus, roles } from '../../../../commons/types'
 
 const defaultPagination = {
@@ -23,7 +22,7 @@ const getColumns = ({ DeleteRow, EditRow, isAdmin }) => [
     dataIndex: 'start_date',
     key: 'start_date',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : '',
+      text ? <span>{formatDateOnly(text)}</span> : '',
   },
   {
     width: 120,

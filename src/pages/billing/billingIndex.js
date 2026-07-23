@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from 'react'
-import moment from 'moment'
 import HeaderPage from '../../components/HeaderPage'
 import BillingTable from './components/BillingTable'
 import DetailBilling from './components/detailBilling'
 import billingSrc from './billingSrc'
 import { message,Modal,Row,Col,Input,Spin } from 'antd'
-import { getPercent, showErrors, roundNumber, validateRole } from '../../utils'
+import { getPercent, showErrors, roundNumber, validateRole, getDateRangeFilter } from '../../utils'
 import {
   stakeholdersTypes,
   permissions,
@@ -14,6 +13,7 @@ import {
   documentsPaymentMethods,
 } from '../../commons/types'
 import { Cache } from 'aws-amplify'
+import ReportsSrc from '../reports/reportsSrc'
 
 const { TextArea } = Input;
 
@@ -145,7 +145,7 @@ function Billing(props) {
       name:'',
       related_internal_document_id: '',
       nit: '',
-      created_at: null,
+      updated_at: null,
       serviceTypes: '',
       paymentMethods: '',
       totalInvoice: '',
@@ -204,20 +204,7 @@ function Billing(props) {
     setLoading(true)
 
     billingSrc
-      .getInvoices({
-        related_internal_document_id: { $like: `%25${filters.related_internal_document_id}%25` },
-        id: { $like: `%25${filters.id}%25` },
-        name: { $like: `%25${filters.name}%25` },
-        document_number: { $like: `%25${filters.document_number}%25` },
-        nit: { $like: `%25${filters.nit}%25` },
-        created_at: filters.created_at
-          ? { $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25` }
-          : '',
-        payment_method: filters.paymentMethods,
-        total_amount: { $like: `%25${filters.totalInvoice}%25` },
-        $limit: pagination.pageSize,
-        $offset: (pagination.current - 1) * pagination.pageSize,
-      })
+      .getInvoices(getInvoiceParams())
       .then(data => {
         setDataSource(data.items || data)
         setPagination(prevState => ({
@@ -228,6 +215,61 @@ function Billing(props) {
       .catch(_ => message.error('Error al cargar facturas'))
       .finally(() => setLoading(false))
   }, [filters, pagination.current, pagination.pageSize])
+
+  const getInvoiceParams = (
+    page = pagination.current,
+    pageSize = pagination.pageSize,
+    withPagination = true
+  ) => ({
+    related_internal_document_id: {
+      $like: `%25${filters.related_internal_document_id}%25`,
+    },
+    id: { $like: `%25${filters.id}%25` },
+    name: { $like: `%25${filters.name}%25` },
+    document_number: { $like: `%25${filters.document_number}%25` },
+    nit: { $like: `%25${filters.nit}%25` },
+    ...getDateRangeFilter(filters.updated_at, {
+      startKey: 'updated_from',
+      endKey: 'updated_to',
+    }),
+    payment_method: filters.paymentMethods,
+    total_amount: { $like: `%25${filters.totalInvoice}%25` },
+    ...(withPagination
+      ? {
+          $limit: pageSize,
+          $offset: (page - 1) * pageSize,
+        }
+      : {}),
+  })
+
+  const exportExcel = base64Excel => {
+    try {
+      const uri = `data:application/octet-stream;base64,${base64Excel}`
+      const link = document.createElement('a')
+      link.setAttribute('download', 'Facturacion.xls')
+      link.setAttribute('href', uri)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(document.body.lastChild)
+    } catch (e) {
+      console.log('ERROR ON EXPORT BILLING', e)
+      message.warning('Error al exportar facturas')
+    }
+  }
+
+  const exportDataAction = () => {
+    setLoading(true)
+    ReportsSrc.exportReport({
+      ...getInvoiceParams(1, 10, false),
+      reportType: 'documentReport',
+    })
+      .then(data => {
+        message.success('Reporte creado')
+        exportExcel(data.reportExcel)
+      })
+      .catch(_ => message.error('Error al exportar facturas'))
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     loadData()
@@ -261,7 +303,7 @@ function Billing(props) {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current, created_at: null })
+    setFilters({ ...initFilters.current, updated_at: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }
@@ -356,9 +398,7 @@ function Billing(props) {
 
   const setSearchFilters = field => value => {
     const nextValue =
-      field === 'created_at'
-        ? value || null
-        : value === undefined || value === null
+      field === 'updated_at' ? value || null : value === undefined || value === null
         ? ''
         : value
     setPagination(prevState => ({ ...prevState, current: 1 }))
@@ -395,8 +435,10 @@ function Billing(props) {
       <div style={{ flexShrink: 0 }}>
         <HeaderPage
           titleButton={'Factura Nueva'}
+          exportButton={'Exportar'}
           title={'Facturación'}
           showDrawer={newBill}
+          onExport={exportDataAction}
           permissions={permissions.FACTURACION}
         />
       </div>
