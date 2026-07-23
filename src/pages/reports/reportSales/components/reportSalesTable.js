@@ -1,5 +1,4 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
-import moment from 'moment'
 import {
   Card,
   Col,
@@ -9,6 +8,7 @@ import {
   Tag as AntTag,
 } from 'antd'
 import Tag from '../../../../components/Tag'
+import { formatGuatemalaDate } from '../../../../utils'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import { numberFormat } from '../../../../utils'
 import ReportSalesFilters from './reportSalesFilters'
@@ -130,7 +130,7 @@ const columns = [
     dataIndex: 'created_at',
     key: 'created_at',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY hh:mm:ss A')}</span> : null,
+      text ? <span>{formatGuatemalaDate(text, 'DD-MM-YYYY hh:mm:ss A')}</span> : null,
   },
   {
     title: 'Metodo de pago',

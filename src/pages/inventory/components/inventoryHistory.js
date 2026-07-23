@@ -1,8 +1,8 @@
 import React from 'react'
-import moment from 'moment'
 import { Row, Col, Divider, Input } from 'antd'
 import DynamicTable from '../../../components/DynamicTable'
 import Tag from '../../../components/Tag'
+import { formatGuatemalaDate } from '../../../utils'
 
 function InventoryHistory(props) {
   const columnsHistory = [
@@ -12,7 +12,7 @@ function InventoryHistory(props) {
       dataIndex: 'created_at', // Field that is goint to be rendered
       key: 'created_at',
       render: text => (
-        <div>{text ? moment(text).format('DD-MM-YYYY') : null}</div>
+        <div>{formatGuatemalaDate(text) || null}</div>
       ),
     },
     {

@@ -1,8 +1,7 @@
 import React from 'react'
-import moment from 'moment'
 import { Row, Col, Table, Card, Drawer, Button } from 'antd'
 import Tag from '../../../../components/Tag'
-import { numberFormat } from '../../../../utils'
+import { numberFormat, formatGuatemalaDate } from '../../../../utils'
 
 const { getFormattedValue } = numberFormat()
 
@@ -12,7 +11,7 @@ const columns = [
     dataIndex: 'created_at', // Field that is goint to be rendered
     key: 'created_at',
     render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY hh:mm:ss A')}</span> : null,
+      text ? <span>{formatGuatemalaDate(text, 'DD-MM-YYYY hh:mm:ss A')}</span> : null,
   },
   {
     title: 'Tipo',

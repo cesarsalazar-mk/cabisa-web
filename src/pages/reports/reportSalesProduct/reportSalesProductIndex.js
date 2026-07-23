@@ -11,7 +11,7 @@ import ReportSalesProductTable from './components/reportSalesProductTable'
 import { permissions, reportSalesItemTypes } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
 import { message } from 'antd'
-import moment from 'moment'
+import { getDateRangeFilter } from '../../../utils'
 
 const emptySummary = {
   top_product: null,
@@ -61,19 +61,6 @@ function ReportSalesProduct(props) {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initFilters.current)
 
-  const getDateRangeFilterReport = dateRange => {
-    if (!dateRange) return {}
-
-    return {
-      start_date: {
-        $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
-      },
-      end_date: {
-        $lte: moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD'),
-      },
-    }
-  }
-
   const getReportParams = (
     page = pagination.current,
     pageSize = pagination.pageSize,
@@ -81,7 +68,7 @@ function ReportSalesProduct(props) {
   ) => ({
     code: { $like: `%25${filters.code}%25` },
     description: { $like: `%25${filters.description}%25` },
-    ...getDateRangeFilterReport(filters.created_at),
+    ...getDateRangeFilter(filters.created_at),
     ...(filters.item_type ? { item_type: filters.item_type } : {}),
     ...(filters.sales_category ? { sales_category: filters.sales_category } : {}),
     ...(withPagination

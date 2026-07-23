@@ -15,8 +15,8 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import ActionOptions from '../../../components/actionOptions'
 import Tag from '../../../components/Tag'
-import moment from 'moment'
 import { permissions, documentsStatus } from '../../../commons/types'
+import { formatGuatemalaDate } from '../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -142,7 +142,7 @@ function PaymentsTable(props) {
       dataIndex: 'created_at',
       key: 'created_at ',
       render: text => (
-        <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
+        <span>{formatGuatemalaDate(text)}</span>
       ),
     },
     {

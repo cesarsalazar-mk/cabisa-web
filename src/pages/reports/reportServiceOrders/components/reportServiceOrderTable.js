@@ -1,5 +1,4 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import moment from 'moment'
 import {
   Table,
   Col,
@@ -20,7 +19,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
 import { useSale, saleActions } from '../../../sales/context'
-import { showErrors } from '../../../../utils'
+import { showErrors, formatDateOnly } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -226,9 +225,7 @@ function ReportServiceOrderTable(props) {
       title: 'Fecha Inicio',
       dataIndex: 'start_date',
       key: 'start_date',
-      render: text => (
-        <span>{text ? moment.utc(text).format('DD-MM-YYYY') : null}</span>
-      ),
+      render: text => <span>{formatDateOnly(text)}</span>,
     },
     {
       width: 200,

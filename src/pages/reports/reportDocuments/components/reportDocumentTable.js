@@ -15,8 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
-import moment from 'moment'
-import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards, formatGuatemalaDate } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -189,12 +188,10 @@ function ReportDocumentTable(props) {
     },
     {
       width: 120,
-      title: 'Fecha de facturacion',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: text => (
-        <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
-      ),
+      title: 'Fecha de Certificacion',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: text => <span>{formatGuatemalaDate(text)}</span>,
     },
     {
       width: 160,

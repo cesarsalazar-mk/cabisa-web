@@ -15,7 +15,7 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../components/Tag'
-import moment from 'moment'
+import { formatGuatemalaDate } from '../../../utils'
 
 const { Search } = Input
 const { RangePicker } = DatePicker
@@ -196,9 +196,7 @@ function BillingManagementTable(props) {
       title: 'Fecha de Creacion',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: text => (
-        <span>{text ? moment.utc(text).format('DD-MM-YYYY') : ''}</span>
-      ),
+      render: text => <span>{formatGuatemalaDate(text)}</span>,
     },
     {
       title: 'Referencia # Documento',

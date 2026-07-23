@@ -6,12 +6,12 @@ import React, {
   useLayoutEffect,
 } from 'react'
 import { message } from 'antd'
-import moment from 'moment'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportManualCashReceiptsTable from './components/reportManualCashReceiptsTable'
 import { permissions } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
 import PaymentsSrc from '../../payments/paymentsSrc'
+import { getDateRangeFilter } from '../../../utils'
 
 const emptySummary = {
   total_receipts: 0,
@@ -33,19 +33,6 @@ function getAvailablePageHeight(pageTop) {
   const footerHeight = footer?.getBoundingClientRect().height || 30
 
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
-}
-
-function getDateRangeFilterReport(dateRange) {
-  if (!dateRange) return {}
-
-  return {
-    start_date: {
-      $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
-    },
-    end_date: {
-      $lte: moment(dateRange[1]).add(1, 'days').format('YYYY-MM-DD'),
-    },
-  }
 }
 
 function ReportManualCashReceipts() {
@@ -94,7 +81,7 @@ function ReportManualCashReceipts() {
     id: { $like: `%25${filters.id || ''}%25` },
     name: { $like: `%25${filters.name || ''}%25` },
     nit: { $like: `%25${filters.nit || ''}%25` },
-    ...getDateRangeFilterReport(filters.created_at),
+    ...getDateRangeFilter(filters.created_at),
     payment_method: filters.paymentMethods,
     total_amount: { $like: `%25${filters.totalInvoice || ''}%25` },
     status: filters.status,

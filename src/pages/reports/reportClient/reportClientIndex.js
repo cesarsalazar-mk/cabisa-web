@@ -5,12 +5,11 @@ import React, {
   useCallback,
   useLayoutEffect,
 } from 'react'
-import moment from 'moment'
 import { message } from 'antd'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportClientTable from './components/reportClientTable'
 import ReportsSrc from '../reportsSrc'
-import { showErrors } from '../../../utils'
+import { showErrors, getDateRangeFilter } from '../../../utils'
 import { stakeholdersTypes, permissions } from '../../../commons/types'
 
 const emptySummary = {
@@ -43,19 +42,6 @@ function getAvailablePageHeight(pageTop) {
   return window.innerHeight - pageTop - footerHeight - CONTENT_PADDING_BOTTOM
 }
 
-function getClientDateRangeFilter(dateRange) {
-  if (!dateRange) return {}
-
-  return {
-    start_date: {
-      $gte: moment(dateRange[0]).format('YYYY-MM-DD'),
-    },
-    end_date: {
-      $lte: moment(dateRange[1]).format('YYYY-MM-DD'),
-    },
-  }
-}
-
 function ReportClient() {
   const pageRef = useRef(null)
   const [pageHeight, setPageHeight] = useState(null)
@@ -85,7 +71,7 @@ function ReportClient() {
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    ...getClientDateRangeFilter(filters.created_at),
+    ...getDateRangeFilter(filters.created_at),
     name: { $like: `%25${filters.name}%25` },
     stakeholder_type: filters.stakeholder_type,
     ...(filters.debt_status ? { debt_status: filters.debt_status } : {}),

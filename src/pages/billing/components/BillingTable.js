@@ -22,11 +22,12 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../components/Tag'
-import moment from 'moment'
 import BillingTotalCell from './BillingTotalCell'
+import { formatGuatemalaDate } from '../../../utils'
 
 const { Search } = Input
 const { Option } = Select
+const { RangePicker } = DatePicker
 
 const staticSectionStyle = { flexShrink: 0 }
 
@@ -160,13 +161,11 @@ function BillingTable(props) {
       ),
     },
     {
-      width: 120,
-      title: 'Fecha de facturacion',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: text => (
-        <span>{text ? moment(text).format('DD-MM-YYYY') : ''}</span>
-      ),
+      width: 130,
+      title: 'Fecha de Certificacion',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: text => <span>{formatGuatemalaDate(text)}</span>,
     },
     {
       width: 160,
@@ -264,13 +263,13 @@ function BillingTable(props) {
             />
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>
-            <DatePicker
-              key={`billing-date-${props.filtersResetKey}`}
+            <RangePicker
+              key={`billing-cert-date-${props.filtersResetKey}`}
               style={{ width: '100%', height: '40px', borderRadius: '8px' }}
-              placeholder='Fecha de facturacion'
               format='DD-MM-YYYY'
-              value={props.filters?.created_at}
-              onChange={props.handleFiltersChange('created_at')}
+              placeholder={['Certificacion desde', 'hasta']}
+              value={props.filters?.updated_at}
+              onChange={props.handleFiltersChange('updated_at')}
             />
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>

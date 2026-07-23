@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from 'react'
-import moment from 'moment'
 import HeaderPage from '../../components/HeaderPage'
 import PaymentsTable from './components/manualPaymentsTable'
 import PaymentsDetail from './components/manualPaymentsDetail'
@@ -8,6 +7,7 @@ import PaymentsCreate from './components/manualPaymentsCreate'
 import { message } from 'antd'
 import { permissions } from '../../commons/types'
 import { getDetailData } from '../billing/billingIndex'
+import { getSingleDateFilter } from '../../utils'
 
 const defaultPagination = {
   current: 1,
@@ -75,13 +75,7 @@ function Payments() {
   ) => ({
     ...(filters.id ? { id: { $like: `%25${filters.id}%25` } } : {}),
     ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
-    ...(filters.created_at
-      ? {
-          created_at: {
-            $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25`,
-          },
-        }
-      : {}),
+    ...getSingleDateFilter(filters.created_at),
     ...(filters.status ? { status: filters.status } : {}),
     $limit: pageSize,
     $offset: (page - 1) * pageSize,

@@ -6,13 +6,13 @@ import React, {
   useLayoutEffect,
 } from 'react'
 import { useHistory } from 'react-router-dom'
-import moment from 'moment'
 import { message } from 'antd'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportServiceOrderTable from './components/reportServiceOrderTable'
 import SalesDetail from '../../sales/components/commons/salesDetail'
 import { permissions } from '../../../commons/types'
 import ReportsSrc from '../reportsSrc'
+import { getSingleDateFilter } from '../../../utils'
 
 const emptySummary = {
   total_orders: 0,
@@ -66,13 +66,7 @@ function ReportServiceOrders() {
   ) => ({
     ...(filters.id ? { id: { $like: `%25${filters.id}%25` } } : {}),
     ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
-    ...(filters.start_date
-      ? {
-          start_date: {
-            $like: `%25${moment(filters.start_date).format('YYYY-MM-DD')}%25`,
-          },
-        }
-      : {}),
+    ...getSingleDateFilter(filters.start_date),
     ...(filters.status ? { status: filters.status } : {}),
     ...(withPagination
       ? {

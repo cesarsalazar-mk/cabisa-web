@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { message } from 'antd'
-import moment from 'moment'
 import GenericTable from '../../../components/genericTable'
 import ReportAccountsReceivableFilters from './components/reportAccountsReceivableFilters'
 import HeaderPage from '../../../components/HeaderPage'
 import Tag from '../../../components/Tag'
 import DocumentTotalCell from '../../../components/DocumentTotalCell'
 import ReportsSrc from '../reportsSrc'
-import { showErrors } from '../../../utils'
+import { showErrors, getSingleDateFilter, getDateRangeFilter, formatGuatemalaDate } from '../../../utils'
 import { stakeholdersTypes } from '../../../commons/types'
 
 const columns = [
@@ -43,22 +42,19 @@ const columns = [
     title: 'Fecha de facturacion',
     dataIndex: 'document_date', // Field that is goint to be rendered
     key: 'document_date',
-    render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : null,
+    render: text => (text ? <span>{formatGuatemalaDate(text)}</span> : null),
   },
   {
     title: 'Fecha a pagar',
     dataIndex: 'credit_due_date', // Field that is goint to be rendered
     key: 'credit_due_date',
-    render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : null,
+    render: text => (text ? <span>{formatGuatemalaDate(text)}</span> : null),
   },
   {
     title: 'Fecha pago realizado',
     dataIndex: 'credit_paid_date', // Field that is goint to be rendered
     key: 'credit_paid_date',
-    render: text =>
-      text ? <span>{moment(text).format('DD-MM-YYYY')}</span> : null,
+    render: text => (text ? <span>{formatGuatemalaDate(text)}</span> : null),
   },
   {
     title: 'Situacion',
@@ -106,21 +102,19 @@ function ReportAccountsReceivable() {
       stakeholder_name: { $like: `%25${filters.stakeholder_name}%25` },
       credit_status: filters.credit_status,
       stakeholder_type: filters.stakeholder_type,
-      created_at: filters.created_at
-        ? { $like: `${moment(filters.created_at).format('YYYY-MM-DD')}%25` }
-        : '',
-      credit_due_date: filters.credit_due_date
-        ? {
-            $like: `${moment(filters.credit_due_date).format('YYYY-MM-DD')}%25`,
-          }
-        : '',
-      credit_paid_date: filters.credit_paid_date
-        ? {
-            $like: `${moment(filters.credit_paid_date).format(
-              'YYYY-MM-DD'
-            )}%25`,
-          }
-        : '',
+      ...getSingleDateFilter(filters.created_at),
+      ...getDateRangeFilter(
+        filters.credit_due_date
+          ? [filters.credit_due_date, filters.credit_due_date]
+          : null,
+        { startKey: 'credit_due_from', endKey: 'credit_due_to' }
+      ),
+      ...getDateRangeFilter(
+        filters.credit_paid_date
+          ? [filters.credit_paid_date, filters.credit_paid_date]
+          : null,
+        { startKey: 'credit_paid_from', endKey: 'credit_paid_to' }
+      ),
     })
       .then(result => setDataSource(result))
       .catch(error => showErrors(error))
