@@ -145,7 +145,7 @@ function Billing(props) {
       name:'',
       related_internal_document_id: '',
       nit: '',
-      updated_at: null,
+      fact_date: null,
       serviceTypes: '',
       paymentMethods: '',
       totalInvoice: '',
@@ -216,24 +216,25 @@ function Billing(props) {
       .finally(() => setLoading(false))
   }, [filters, pagination.current, pagination.pageSize])
 
+  const getLikeFilter = value =>
+    value ? { $like: `%25${value}%25` } : undefined
+
   const getInvoiceParams = (
     page = pagination.current,
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    related_internal_document_id: {
-      $like: `%25${filters.related_internal_document_id}%25`,
-    },
-    id: { $like: `%25${filters.id}%25` },
-    name: { $like: `%25${filters.name}%25` },
-    document_number: { $like: `%25${filters.document_number}%25` },
-    nit: { $like: `%25${filters.nit}%25` },
-    ...getDateRangeFilter(filters.updated_at, {
+    related_internal_document_id: getLikeFilter(filters.related_internal_document_id),
+    id: getLikeFilter(filters.id),
+    name: getLikeFilter(filters.name),
+    document_number: getLikeFilter(filters.document_number),
+    nit: getLikeFilter(filters.nit),
+    ...getDateRangeFilter(filters.fact_date, {
       startKey: 'updated_from',
       endKey: 'updated_to',
     }),
     payment_method: filters.paymentMethods,
-    total_amount: { $like: `%25${filters.totalInvoice}%25` },
+    total_amount: getLikeFilter(filters.totalInvoice),
     ...(withPagination
       ? {
           $limit: pageSize,
@@ -303,7 +304,7 @@ function Billing(props) {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current, updated_at: null })
+    setFilters({ ...initFilters.current, fact_date: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }
@@ -355,7 +356,8 @@ function Billing(props) {
         let data = {
           nit:stakeholder_nit,
           uuid,
-          certificateDate: infileDoc.xml_certificado.fecha_certificacion
+          certificateDate: infileDoc.xml_certificado.fecha_certificacion,
+          cabisa_document_id: row.id
         }
         setCancelDescription('')
         setRowData(row)
@@ -396,9 +398,30 @@ function Billing(props) {
     // window.open(urlDocument, '_blank').focus();
   }
 
+  const handlerRetryCertification = async row => {
+    try {
+      setLoading(true)
+      const response = await billingSrc.certifyInvoiceDraft(row.id)
+
+      if (response?.data?.status === 'SAT_FAILED') {
+        message.warning(
+          'La factura sigue en Fallo SAT. Verifica el mensaje devuelto por el sistema e intenta nuevamente.'
+        )
+      } else {
+        message.success('Factura certificada exitosamente')
+      }
+
+      loadData()
+    } catch (error) {
+      showErrors(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const setSearchFilters = field => value => {
     const nextValue =
-      field === 'updated_at' ? value || null : value === undefined || value === null
+      field === 'fact_date' ? value || null : value === undefined || value === null
         ? ''
         : value
     setPagination(prevState => ({ ...prevState, current: 1 }))
@@ -462,6 +485,7 @@ function Billing(props) {
           handlerDeleteRow={handlerDeleteRow}
           handlerShowDocument={handlerShowDocument}
           handlerPrintDocument={handlerPrintDocument}
+          handlerRetryCertification={handlerRetryCertification}
           loading={loading}
           isAdmin={isAdmin}
           pagination={pagination}

@@ -19,8 +19,7 @@ import moment from 'moment'
 import {
   numberFormat,
   canViewRestrictedReportCards,
-  formatGuatemalaDate,
-  parseGuatemalaDate,
+  formatFactDate,
 } from '../../../../utils'
 import ActionOptions from '../../../../components/actionOptions'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
@@ -210,7 +209,7 @@ function ReportCashReceiptsTable(props) {
       dataIndex: 'created_at',
       key: 'created_at',
       render: text => (
-        <span>{formatGuatemalaDate(text)}</span>
+        <span>{formatFactDate(text, 'DD-MM-YYYY')}</span>
       ),
     },
     {
@@ -221,7 +220,7 @@ function ReportCashReceiptsTable(props) {
       render: (_, record) => (
         <span>
           {record.created_at
-            ? moment().startOf('day').diff(parseGuatemalaDate(record.created_at).startOf('day'), 'days')
+            ? moment().startOf('day').diff(moment(record.created_at, 'YYYY-MM-DD HH:mm:ss').startOf('day'), 'days')
             : ''}
         </span>
       ),

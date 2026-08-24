@@ -8,7 +8,6 @@ import BillingFieldsTwo from '../../../billing/components/billingFieldsTwo'
 import { showErrors } from '../../../../utils'
 import { getDetailData } from '../../../billing/billingIndex'
 import { documentsPaymentMethods } from '../../../../commons/types'
-import { Cache } from 'aws-amplify'
 
 function ServiceNoteBill() {
   const location = useLocation()
@@ -36,63 +35,27 @@ function ServiceNoteBill() {
       .finally(() => setLoading(false))
   }, [location])
 
-  const handleSaveData = async saveData => {   
-  let billData =  createBillStructure(saveData)            
-   setLoading(true)
-  
-  let infileDoc = await billingSrc.createInvoiceFel(billData)
-    
-  let infileMessage = infileDoc.message  
-    
-  if(infileMessage === 'SUCCESSFUL'){      
-      const _serie = infileDoc.data.serie
-      const _document_number = infileDoc.data.numero
-      const _uuid = infileDoc.data.uuid
-      saveData.serie = _serie
-      saveData.document_number = _document_number
-      saveData.uuid = _uuid    
-      setLoading(true)
-    
-    saleSrc
-      .approveSale(saveData)
-      .then(_ => {
+  const handleSaveData = async saveData => {
+    setLoading(true)
+
+    try {
+      const documentId = saveData.document_id
+      const certifyResponse = await saleSrc.certifySale(documentId, saveData)
+
+      if (certifyResponse?.data?.status === 'SAT_FAILED') {
+        message.warning(
+          'La factura quedo en estado Fallo SAT. Puedes reintentar la certificacion desde Ventas.'
+        )
+      } else {
         message.success('Factura creada exitosamente')
-        history.push('/sales')
-      })
-      .catch(error => showErrors(error))
-      .finally(() => setLoading(false))
+      }
 
-    }else{      
+      history.push('/sales')
+    } catch (error) {
+      showErrors(error)
+    } finally {
       setLoading(false)
-      message.error(infileMessage)
     }
-        
-  }
-
-  const createBillStructure = dataBill => {
-    const UserName = Cache.getItem('currentSession')
-    const { client_data: client, description: observations, products,credit_days } = dataBill;
-    let items = [];
-    items = products.map(product => {
-       const price = (product.service_user_price || product.product_user_price)
-       const description = product.product_description || product.service_description       
-       const quantity = product.product_quantity
-       const discount = ((product.product_discount_percentage/100) * price) * quantity
-       const code = product.code_product
-       const type = product.service_type
-       return { description, price,discount,quantity,code,type}
-    })
-    
-    let newStructure = {
-       client,
-       "invoice":{
-          items,      
-          observations,
-          created_by: UserName ? UserName.userName : 'system',
-          credit_days
-       }
-    }
-    return newStructure
   }
 
   return (

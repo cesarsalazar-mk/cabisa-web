@@ -45,7 +45,7 @@ function ReportDocuments() {
       related_internal_document_id: '',
       document_number: '',
       name: '',
-      created_at: null,
+      fact_date: null,
       paymentMethods: '',
       totalInvoice: '',
     }
@@ -66,22 +66,23 @@ function ReportDocuments() {
     ])
   }, [])
 
+  const getLikeFilter = value =>
+    value ? { $like: `%25${value}%25` } : undefined
+
   const getReportParams = (
     page = pagination.current,
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    related_internal_document_id: {
-      $like: `%25${filters.related_internal_document_id || ''}%25`,
-    },
-    name: { $like: `%25${filters.name || ''}%25` },
-    document_number: { $like: `%25${filters.document_number || ''}%25` },
-    ...getDateRangeFilter(filters.created_at, {
+    related_internal_document_id: getLikeFilter(filters.related_internal_document_id),
+    name: getLikeFilter(filters.name),
+    document_number: getLikeFilter(filters.document_number),
+    ...getDateRangeFilter(filters.fact_date, {
       startKey: 'updated_from',
       endKey: 'updated_to',
     }),
     payment_method: filters.paymentMethods,
-    total_amount: { $like: `%25${filters.totalInvoice || ''}%25` },
+    total_amount: getLikeFilter(filters.totalInvoice),
     ...(withPagination
       ? {
           $limit: pageSize,
@@ -134,7 +135,7 @@ function ReportDocuments() {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current, created_at: null })
+    setFilters({ ...initFilters.current, fact_date: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }

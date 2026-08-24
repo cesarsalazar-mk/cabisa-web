@@ -18,6 +18,7 @@ const getServiceTypes = () => api.get(`${urlInvoice}/service-types`)
 const getSales = params => api.get(urlSale, { ...params })
 const getSalesStatus = () => api.get(`${urlSale}-status`)
 const approveSale = data => api.post(`${urlSale}/invoice`, data)
+const certifySale = (documentId, data) => api.post(`${urlSale}/${documentId}/certify`, data)
 const createSale = data => api.post(urlSale, data)
 const cancelSale = data => api.put(`${urlSale}/cancel`, data)
 const updateSale = data => api.put(urlSale, data)
@@ -32,6 +33,7 @@ const InventorySrc = {
   getSales,
   getSalesStatus,
   approveSale,
+  certifySale,
   createSale,
   cancelSale,
   updateSale,
