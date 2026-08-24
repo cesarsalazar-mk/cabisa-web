@@ -8,7 +8,7 @@ import {
   Tag as AntTag,
 } from 'antd'
 import Tag from '../../../../components/Tag'
-import { formatGuatemalaDate } from '../../../../utils'
+import { formatFactDate } from '../../../../utils'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import { numberFormat } from '../../../../utils'
 import ReportSalesFilters from './reportSalesFilters'
@@ -130,7 +130,7 @@ const columns = [
     dataIndex: 'created_at',
     key: 'created_at',
     render: text =>
-      text ? <span>{formatGuatemalaDate(text, 'DD-MM-YYYY hh:mm:ss A')}</span> : null,
+      text ? <span>{formatFactDate(text, 'DD-MM-YYYY hh:mm:ss A')}</span> : null,
   },
   {
     title: 'Metodo de pago',

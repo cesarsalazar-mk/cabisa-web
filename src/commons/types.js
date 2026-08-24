@@ -21,6 +21,7 @@ export const documentsStatus = {
   PENDING: 'PENDING',
   CANCELLED: 'CANCELLED',
   APPROVED: 'APPROVED',
+  SAT_FAILED: 'SAT_FAILED',
 }
 
 export const documentsPaymentMethods = {

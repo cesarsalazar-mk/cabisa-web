@@ -20,6 +20,7 @@ const config = {
     APPROVED: { color: '#87d068', text: 'Aprobado' },
     CANCELLED: { color: '#f50', text: 'Anulado' },
     PENDING: { color: 'grey', text: 'Pendiente' },
+    SAT_FAILED: { color: 'volcano', text: 'Fallo SAT' },
   },
   documentsPaymentMethods: {
     CARD: { color: 'geekblue', text: 'Crédito' },

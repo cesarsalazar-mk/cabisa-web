@@ -18,12 +18,12 @@ import {
   DeleteOutlined,
   FileSearchOutlined,
   PrinterOutlined,
+  SyncOutlined,
 } from '@ant-design/icons'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../components/Tag'
 import BillingTotalCell from './BillingTotalCell'
-import { formatGuatemalaDate } from '../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -87,6 +87,8 @@ function BillingTable(props) {
   const handlerShowDocument = data => props.handlerShowDocument(data)
 
   const handlerPrintDocument = data => props.handlerPrintDocument(data)
+
+  const handlerRetryCertification = data => props.handlerRetryCertification(data)
 
   useLayoutEffect(() => {
     const updateTableHeight = () => {
@@ -162,10 +164,12 @@ function BillingTable(props) {
     },
     {
       width: 130,
-      title: 'Fecha de Certificacion',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
-      render: text => <span>{formatGuatemalaDate(text)}</span>,
+      title: 'Fecha Facturacion',
+      dataIndex: 'fact_date',
+      key: 'fact_date',
+      render: text => (
+        <span>{text ? String(text).replace('T', ' ').replace(/\.\d+Z?$/, '') : ''}</span>
+      ),
     },
     {
       width: 160,
@@ -194,34 +198,57 @@ function BillingTable(props) {
       dataIndex: 'id',
       key: 'id',
       width: 175,
-      render: (_, data) => (
-        <>
-          <Tooltip title={'Imprimir documento'}>
-            <Button
-              icon={<PrinterOutlined />}
-              onClick={() => handlerPrintDocument(data)}
-            />
-          </Tooltip>
-          <Divider type={'vertical'} />
-          <Tooltip title={'Ver documento'}>
-            <Button
-              icon={<FileSearchOutlined />}
-              onClick={() => handlerShowDocument(data)}
-            />
-          </Tooltip>
-          <Divider type={'vertical'} />
-          <Tooltip title={'Anular'}>
-            <Popconfirm
-              title={`¿Estas seguro de anular la factura?`}
-              onConfirm={() => handlerDeleteRow(data)}
-              okText='Si'
-              cancelText='No'
-            >
-              <Button danger icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Tooltip>
-        </>
-      ),
+      render: (_, data) => {
+        if (data.status === 'SAT_FAILED') {
+          return (
+            <Tooltip title={'Reintentar certificacion'}>
+              <Button
+                type='primary'
+                icon={<SyncOutlined />}
+                onClick={() => handlerRetryCertification(data)}
+              />
+            </Tooltip>
+          )
+        }
+
+        const canViewDocument =
+          data.status === 'APPROVED' || data.status === 'CANCELLED'
+
+        if (!canViewDocument) return null
+
+        return (
+          <>
+            <Tooltip title={'Imprimir documento'}>
+              <Button
+                icon={<PrinterOutlined />}
+                onClick={() => handlerPrintDocument(data)}
+              />
+            </Tooltip>
+            <Divider type={'vertical'} />
+            <Tooltip title={'Ver documento'}>
+              <Button
+                icon={<FileSearchOutlined />}
+                onClick={() => handlerShowDocument(data)}
+              />
+            </Tooltip>
+            {data.status === 'APPROVED' && (
+              <>
+                <Divider type={'vertical'} />
+                <Tooltip title={'Anular'}>
+                  <Popconfirm
+                    title={`¿Estas seguro de anular la factura?`}
+                    onConfirm={() => handlerDeleteRow(data)}
+                    okText='Si'
+                    cancelText='No'
+                  >
+                    <Button danger icon={<DeleteOutlined />} />
+                  </Popconfirm>
+                </Tooltip>
+              </>
+            )}
+          </>
+        )
+      },
     },
   ]
 
@@ -268,8 +295,8 @@ function BillingTable(props) {
               style={{ width: '100%', height: '40px', borderRadius: '8px' }}
               format='DD-MM-YYYY'
               placeholder={['Certificacion desde', 'hasta']}
-              value={props.filters?.updated_at}
-              onChange={props.handleFiltersChange('updated_at')}
+              value={props.filters?.fact_date}
+              onChange={props.handleFiltersChange('fact_date')}
             />
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>

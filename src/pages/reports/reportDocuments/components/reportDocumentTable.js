@@ -15,7 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
-import { numberFormat, canViewRestrictedReportCards, formatGuatemalaDate } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -188,10 +188,12 @@ function ReportDocumentTable(props) {
     },
     {
       width: 120,
-      title: 'Fecha de Certificacion',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
-      render: text => <span>{formatGuatemalaDate(text)}</span>,
+      title: 'Fecha Facturacion',
+      dataIndex: 'fact_date',
+      key: 'fact_date',
+      render: text => (
+        <span>{text ? String(text).replace('T', ' ').replace(/\.\d+Z?$/, '') : ''}</span>
+      ),
     },
     {
       width: 160,
@@ -301,8 +303,8 @@ function ReportDocumentTable(props) {
               key={`created-at-${props.filtersResetKey}`}
               style={{ width: '100%', height: '40px', borderRadius: '6px' }}
               format='DD-MM-YYYY'
-              value={props.filters?.created_at}
-              onChange={props.handleFiltersChange('created_at')}
+              value={props.filters?.fact_date}
+              onChange={props.handleFiltersChange('fact_date')}
             />
           </Col>
           <Col xs={24} sm={12} md={4} lg={4}>

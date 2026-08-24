@@ -240,6 +240,18 @@ export const parseGuatemalaDate = value => {
   return utcValue.clone().utcOffset(-GUATEMALA_UTC_OFFSET_MINUTES)
 }
 
+export const formatFactDate = (value, format = 'DD-MM-YYYY') => {
+  if (!value) return ''
+
+  const parsed = moment(
+    value,
+    ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm:ss.SSS', moment.ISO_8601],
+    true
+  )
+
+  return parsed.isValid() ? parsed.format(format) : ''
+}
+
 export const formatGuatemalaDate = (value, format = 'DD-MM-YYYY') => {
   if (!value) return ''
 

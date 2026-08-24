@@ -12,6 +12,9 @@ const getPaymentMethods = () => api.get(`${urlInvoice}/payment-methods`)
 const getServiceTypes = () => api.get(`${urlInvoice}/service-types`)
 const getCreditDays = () => api.get(`${urlInvoice}/credit-days`)
 const createInvoice = data => api.post(urlInvoice, data)
+const createInvoiceDraft = data => api.post(`${urlInvoice}/draft`, data)
+const certifyInvoiceDraft = documentId =>
+  api.post(`${urlInvoice}/${documentId}/certify`, {})
 const updateInvoice = data => api.put(urlInvoice, data)
 const cancelInvoice = data => api.put(`${urlInvoice}/cancel`, data)
 //fel
@@ -41,6 +44,8 @@ const InventorySrc = {
   getInvoices,
   getPaymentMethods,
   createInvoice,
+  createInvoiceDraft,
+  certifyInvoiceDraft,
   updateInvoice,
   cancelInvoice,
   getProductsOptions,

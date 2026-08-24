@@ -6,7 +6,7 @@ import HeaderPage from '../../../components/HeaderPage'
 import Tag from '../../../components/Tag'
 import DocumentTotalCell from '../../../components/DocumentTotalCell'
 import ReportsSrc from '../reportsSrc'
-import { showErrors, getSingleDateFilter, getDateRangeFilter, formatGuatemalaDate } from '../../../utils'
+import { showErrors, getSingleDateFilter, getDateRangeFilter, formatFactDate, formatGuatemalaDate } from '../../../utils'
 import { stakeholdersTypes } from '../../../commons/types'
 
 const columns = [
@@ -42,7 +42,7 @@ const columns = [
     title: 'Fecha de facturacion',
     dataIndex: 'document_date', // Field that is goint to be rendered
     key: 'document_date',
-    render: text => (text ? <span>{formatGuatemalaDate(text)}</span> : null),
+    render: text => (text ? <span>{formatFactDate(text, 'DD-MM-YYYY')}</span> : null),
   },
   {
     title: 'Fecha a pagar',
