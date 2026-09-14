@@ -16,7 +16,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import ActionOptions from '../../../components/actionOptions'
 import Tag from '../../../components/Tag'
 import { permissions, documentsStatus } from '../../../commons/types'
-import { formatGuatemalaDate } from '../../../utils'
+import { formatFactDate } from '../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -139,10 +139,10 @@ function PaymentsTable(props) {
     {
       width: 115,
       title: 'Fecha',
-      dataIndex: 'created_at',
-      key: 'created_at ',
+      dataIndex: 'fact_date',
+      key: 'fact_date',
       render: text => (
-        <span>{formatGuatemalaDate(text)}</span>
+        <span>{formatFactDate(text, 'DD-MM-YYYY')}</span>
       ),
     },
     {
@@ -238,8 +238,8 @@ function PaymentsTable(props) {
               style={{ width: '100%', height: '40px', borderRadius: '8px' }}
               placeholder='Fecha de facturacion'
               format='DD-MM-YYYY'
-              value={props.filters?.created_at}
-              onChange={props.handleFiltersChange('created_at')}
+              value={props.filters?.fact_date}
+              onChange={props.handleFiltersChange('fact_date')}
             />
           </Col>
           <Col xs={24} sm={12} md={8} lg={4}>

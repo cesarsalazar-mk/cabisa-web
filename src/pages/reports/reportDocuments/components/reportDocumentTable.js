@@ -15,7 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
-import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import { numberFormat, canViewRestrictedReportCards, formatFactDate } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
@@ -187,12 +187,12 @@ function ReportDocumentTable(props) {
       ),
     },
     {
-      width: 120,
+      width: 150,
       title: 'Fecha Facturacion',
       dataIndex: 'fact_date',
       key: 'fact_date',
       render: text => (
-        <span>{text ? String(text).replace('T', ' ').replace(/\.\d+Z?$/, '') : ''}</span>
+        <span>{formatFactDate(text, 'DD-MM-YYYY HH:mm:ss')}</span>
       ),
     },
     {

@@ -23,6 +23,12 @@ const getClientsAccountState = params =>
       : { $ne: stakeholdersTypes.PROVIDER },
     status: stakeholdersStatus.ACTIVE,
   })
+const getClientsAccountMovements = params =>
+  api.get(`${urlReport}/clients-account-movements`, params)
+const getClientsAccountUnpaidInvoices = params =>
+  api.get(`${urlReport}/clients-account-unpaid-invoices`, params)
+const getClientsAccountInvoices = params =>
+  api.get(`${urlReport}/clients-account-invoices`, params)
 const getClientTypes = () => api.get(`${urlStakeholder}/types`)
 const getProductsCategories = () => api.get(`${urlProduct}-categories`)
 const getStakeholdersOptions = params =>
@@ -42,6 +48,9 @@ const ReportsSrc = {
   getInventory,
   getAccountsReceivable,
   getClientsAccountState,
+  getClientsAccountMovements,
+  getClientsAccountUnpaidInvoices,
+  getClientsAccountInvoices,
   getClientTypes,
   getCreditStatusOptions,
   getStakeholderTypes,

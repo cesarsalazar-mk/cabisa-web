@@ -8,23 +8,32 @@ import React, {
 import { message } from 'antd'
 import HeaderPage from '../../../components/HeaderPage'
 import ReportClientTable from './components/reportClientTable'
+import ReportClientStatementDrawer from './components/reportClientStatementDrawer'
 import ReportsSrc from '../reportsSrc'
-import { showErrors, getDateRangeFilter } from '../../../utils'
+import { showErrors } from '../../../utils'
 import { stakeholdersTypes, permissions } from '../../../commons/types'
 
 const emptySummary = {
   total_clients: 0,
   clients_with_debt: 0,
   clients_without_debt: 0,
-  total_credit: 0,
-  total_paid_credit: 0,
-  total_credit_balance: 0,
+  clients_overdue: 0,
+  clients_overdue_90: 0,
+  total_balance: 0,
   total_debt_balance: 0,
-  total_debt_charge: 0,
-  total_debt_paid: 0,
-  total_without_debt_balance: 0,
-  total_without_debt_charge: 0,
-  total_without_debt_paid: 0,
+  total_paid: 0,
+  total_unpaid_invoices: 0,
+  total_paid_invoices: 0,
+  total_aging_0_30: 0,
+  total_aging_31_60: 0,
+  total_aging_61_90: 0,
+  total_aging_over_90: 0,
+  total_invoices_count: 0,
+  total_invoiced_amount: 0,
+  cancelled_invoices_count: 0,
+  cancelled_invoices_amount: 0,
+  approved_invoices_count: 0,
+  approved_invoices_amount: 0,
 }
 
 const defaultPagination = {
@@ -49,10 +58,9 @@ function ReportClient() {
 
   if (!initFilters.current) {
     initFilters.current = {
-      created_at: null,
       name: '',
       stakeholder_type: '',
-      debt_status: '',
+      debt_status: 'UNPAID',
     }
   }
 
@@ -65,13 +73,13 @@ function ReportClient() {
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState(initFilters.current)
   const [filtersResetKey, setFiltersResetKey] = useState(0)
+  const [statementClient, setStatementClient] = useState(null)
 
   const getReportParams = (
     page = pagination.current,
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    ...getDateRangeFilter(filters.created_at),
     name: { $like: `%25${filters.name}%25` },
     stakeholder_type: filters.stakeholder_type,
     ...(filters.debt_status ? { debt_status: filters.debt_status } : {}),
@@ -142,7 +150,7 @@ function ReportClient() {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current, created_at: null })
+    setFilters({ ...initFilters.current })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }
@@ -171,7 +179,7 @@ function ReportClient() {
         message.success('Reporte creado')
         exportExcel(data.reportExcel)
       })
-      .catch(_ => message.error('Error al cargar reporte facturas'))
+      .catch(_ => message.error('Error al exportar estado de cuenta'))
       .finally(() => setLoading(false))
   }
 
@@ -179,14 +187,14 @@ function ReportClient() {
     try {
       const uri = `data:application/octet-stream;base64,${base64Excel}`
       const link = document.createElement('a')
-      link.setAttribute('download', 'Reporte-Cuenta-Clientes.xls')
+      link.setAttribute('download', 'Reporte-Estado-Cuenta-Clientes.xls')
       link.setAttribute('href', uri)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(document.body.lastChild)
     } catch (e) {
       console.log('ERROR ON EXPORT MANIFEST', e)
-      message.warning('Error al exportar el manifiesto')
+      message.warning('Error al exportar el reporte')
     } finally {
       setLoading(false)
     }
@@ -231,8 +239,14 @@ function ReportClient() {
           loading={loading}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
+          onOpenStatement={setStatementClient}
         />
       </div>
+      <ReportClientStatementDrawer
+        visible={Boolean(statementClient)}
+        client={statementClient}
+        onClose={() => setStatementClient(null)}
+      />
     </div>
   )
 }
