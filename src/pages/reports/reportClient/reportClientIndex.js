@@ -60,16 +60,17 @@ function ReportClient() {
     initFilters.current = {
       name: '',
       stakeholder_type: '',
-      debt_status: 'UNPAID',
+      debt_status: '',
     }
   }
 
   const [clients, setClients] = useState([])
   const [summary, setSummary] = useState(emptySummary)
   const [pagination, setPagination] = useState(defaultPagination)
-  const [stakeholderTypesOptionsList, setStakeholderTypesOptionsList] = useState(
-    []
-  )
+  const [
+    stakeholderTypesOptionsList,
+    setStakeholderTypesOptionsList,
+  ] = useState([])
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState(initFilters.current)
   const [filtersResetKey, setFiltersResetKey] = useState(0)
@@ -80,8 +81,10 @@ function ReportClient() {
     pageSize = pagination.pageSize,
     withPagination = true
   ) => ({
-    name: { $like: `%25${filters.name}%25` },
-    stakeholder_type: filters.stakeholder_type,
+    ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
+    ...(filters.stakeholder_type
+      ? { stakeholder_type: filters.stakeholder_type }
+      : {}),
     ...(filters.debt_status ? { debt_status: filters.debt_status } : {}),
     ...(withPagination
       ? {
