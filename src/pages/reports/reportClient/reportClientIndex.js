@@ -173,7 +173,6 @@ function ReportClient() {
       stakeholder_type: filters.stakeholder_type
         ? filters.stakeholder_type
         : { $ne: stakeholdersTypes.PROVIDER },
-      status: 'ACTIVE',
       reportType: 'clientReport',
     }
 

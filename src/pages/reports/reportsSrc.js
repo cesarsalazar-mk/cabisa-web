@@ -1,6 +1,6 @@
 import api from '../../commons/api'
 import { stage } from '../../commons/credentials'
-import { stakeholdersStatus, stakeholdersTypes } from '../../commons/types'
+import { stakeholdersTypes } from '../../commons/types'
 
 const urlStakeholder = stage.stakeholderUrl
 const urlReport = stage.reportUrl
@@ -21,7 +21,6 @@ const getClientsAccountState = params =>
     stakeholder_type: params.stakeholder_type
       ? params.stakeholder_type
       : { $ne: stakeholdersTypes.PROVIDER },
-    status: stakeholdersStatus.ACTIVE,
   })
 const getClientsAccountMovements = params =>
   api.get(`${urlReport}/clients-account-movements`, params)
