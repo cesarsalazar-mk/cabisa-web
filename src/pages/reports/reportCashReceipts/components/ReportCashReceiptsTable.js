@@ -220,7 +220,15 @@ function ReportCashReceiptsTable(props) {
       render: (_, record) => (
         <span>
           {record.created_at
-            ? moment().startOf('day').diff(moment(record.created_at, 'YYYY-MM-DD HH:mm:ss').startOf('day'), 'days')
+            ? moment()
+                .startOf('day')
+                .diff(
+                  moment(
+                    formatFactDate(record.created_at, 'YYYY-MM-DD'),
+                    'YYYY-MM-DD'
+                  ).startOf('day'),
+                  'days'
+                )
             : ''}
         </span>
       ),

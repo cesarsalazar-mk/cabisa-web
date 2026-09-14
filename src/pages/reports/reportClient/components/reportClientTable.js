@@ -1,8 +1,7 @@
-import React, { useState, useLayoutEffect, useRef } from 'react'
+import React, { useState, useLayoutEffect, useRef, useEffect } from 'react'
 import {
   Card,
   Col,
-  DatePicker,
   Row,
   Select,
   Table,
@@ -10,30 +9,43 @@ import {
   Button,
   Pagination,
   Input,
+  Spin,
+  Tooltip,
 } from 'antd'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import DownOutlined from '@ant-design/icons/lib/icons/DownOutlined'
 import RightOutlined from '@ant-design/icons/lib/icons/RightOutlined'
+import FileTextOutlined from '@ant-design/icons/lib/icons/FileTextOutlined'
+import QuestionCircleOutlined from '@ant-design/icons/lib/icons/QuestionCircleOutlined'
 import Tag from '../../../../components/Tag'
-import { formatGuatemalaDate } from '../../../../utils'
+import ReportsSrc from '../../reportsSrc'
 import {
   numberFormat,
-  formatPhone,
   sortColumnString,
   canViewRestrictedReportCards,
+  formatFactDate,
+  formatGuatemalaDate,
+  showErrors,
 } from '../../../../utils'
 
 const { Search } = Input
 const { Option } = Select
-const { RangePicker } = DatePicker
 
 const debtStatusOptions = [
   { value: '', label: 'Todo' },
-  { value: 'WITH_DEBT', label: 'Con deuda' },
-  { value: 'WITH_DEBT_OVER_120', label: 'Con deuda +120 dias' },
-  { value: 'WITHOUT_DEBT', label: 'Sin deuda' },
+  { value: 'UNPAID', label: 'Pendiente de pago' },
+  { value: 'PAID', label: 'Ya pagado' },
+  { value: 'OVERDUE', label: 'Vencido' },
+  { value: 'WITH_DEBT_OVER_90', label: 'Vencido +90 dias' },
 ]
+
+const accountStatusMeta = {
+  AL_DIA: { label: 'Ya pagado', color: 'green' },
+  POR_VENCER: { label: 'Pendiente', color: 'gold' },
+  VENCIDO: { label: 'Vencido', color: 'orange' },
+  VENCIDO_90: { label: 'Vencido +90', color: 'red' },
+}
 
 const summaryCardCol = { xs: 24, sm: 12, md: 8, lg: 8 }
 
@@ -62,7 +74,6 @@ const cardStyle = {
   flexDirection: 'column',
 }
 const cardColStyle = { display: 'flex' }
-
 const staticSectionStyle = { flexShrink: 0 }
 
 const pageLayoutStyle = {
@@ -111,15 +122,18 @@ const tablePaginationStyle = {
   textAlign: 'right',
 }
 
-const isOverdueDebt120 = record => Boolean(Number(record?.has_overdue_debt_120))
+const agingColumnTitle = (label, tooltip) => (
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    {label}
+    <Tooltip title={tooltip}>
+      <QuestionCircleOutlined
+        style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 12 }}
+      />
+    </Tooltip>
+  </span>
+)
 
-const getClientAccountRowClassName = record => {
-  if (isOverdueDebt120(record)) return 'client-account-row-overdue-120'
-  if (!record?.has_debt) return 'client-account-row-ok'
-  return ''
-}
-
-function SummaryCard({ title, primary, secondary, tertiary }) {
+function SummaryCard({ title, primary, secondary, tertiary, items }) {
   return (
     <Card
       className={'card-border-radius'}
@@ -127,10 +141,173 @@ function SummaryCard({ title, primary, secondary, tertiary }) {
       bodyStyle={cardBodyStyle}
     >
       <div style={cardTitleStyle}>{title}</div>
-      {primary && <div style={cardItemStyle}>{primary}</div>}
-      {secondary && <div style={cardDetailStyle}>{secondary}</div>}
-      {tertiary && <div style={cardDetailStyle}>{tertiary}</div>}
+      {items?.length ? (
+        items.map((item, index) => (
+          <div
+            key={`${item.label}-${index}`}
+            style={{ marginTop: index === 0 ? 0 : 8 }}
+          >
+            <div style={cardItemStyle}>
+              {item.label}: {item.value}
+            </div>
+            {item.detail ? (
+              <div style={cardDetailStyle}>{item.detail}</div>
+            ) : null}
+          </div>
+        ))
+      ) : (
+        <>
+          {primary && <div style={cardItemStyle}>{primary}</div>}
+          {secondary && <div style={cardDetailStyle}>{secondary}</div>}
+          {tertiary && <div style={cardDetailStyle}>{tertiary}</div>}
+        </>
+      )}
     </Card>
+  )
+}
+
+function UnpaidInvoicesExpand({ record, formatAmount }) {
+  const [loading, setLoading] = useState(false)
+  const [invoices, setInvoices] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+
+    ReportsSrc.getClientsAccountInvoices({
+      stakeholder_id: record.id,
+      payment_status: 'UNPAID',
+    })
+      .then(result => {
+        if (!cancelled) setInvoices(result.items || result || [])
+      })
+      .catch(error => {
+        if (!cancelled) {
+          setInvoices([])
+          showErrors(error)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [record.id])
+
+  const columns = [
+    {
+      title: 'Factura',
+      dataIndex: 'document_number',
+      key: 'document_number',
+      width: 130,
+    },
+    {
+      title: 'Fecha',
+      dataIndex: 'document_date',
+      key: 'document_date',
+      width: 110,
+      render: text => formatFactDate(text),
+    },
+    {
+      title: 'Vence',
+      dataIndex: 'due_date',
+      key: 'due_date',
+      width: 110,
+      render: text => formatGuatemalaDate(text),
+    },
+    {
+      title: 'Total',
+      dataIndex: 'total_amount',
+      key: 'total_amount',
+      width: 110,
+      render: text => formatAmount(text),
+    },
+    {
+      title: 'Pagado',
+      dataIndex: 'paid_amount',
+      key: 'paid_amount',
+      width: 110,
+      render: text => formatAmount(text),
+    },
+    {
+      title: 'Pendiente',
+      dataIndex: 'unpaid_amount',
+      key: 'unpaid_amount',
+      width: 120,
+      render: text => (
+        <span style={{ fontWeight: 600 }}>{formatAmount(text)}</span>
+      ),
+    },
+    {
+      title: 'Ultimo pago',
+      dataIndex: 'last_payment_date',
+      key: 'last_payment_date',
+      width: 120,
+      render: text => (text ? formatGuatemalaDate(text) : '-'),
+    },
+    {
+      title: 'Dias atraso',
+      dataIndex: 'days_overdue',
+      key: 'days_overdue',
+      width: 110,
+      render: days => {
+        const value = Number(days) || 0
+        // Unpaid invoices that are not past due are still pending ("Por vencer"),
+        // not "Al dia" (which means fully paid / no debt).
+        if (value <= 0) return <AntTag color='gold'>Por vencer</AntTag>
+        return (
+          <span
+            style={{
+              color: value > 90 ? '#cf1322' : '#d46b08',
+              fontWeight: 600,
+            }}
+          >
+            {value} dias
+          </span>
+        )
+      },
+    },
+  ]
+
+  return (
+    <div className={'text-left'}>
+      <div style={{ fontWeight: 600, marginBottom: 10 }}>
+        Facturas pendientes de pago
+      </div>
+      {loading ? (
+        <Spin size='small' />
+      ) : (
+        <Table
+          size='small'
+          pagination={false}
+          rowKey='id'
+          dataSource={invoices}
+          columns={columns}
+          locale={{ emptyText: 'Sin facturas pendientes' }}
+          scroll={{ y: 220 }}
+          expandable={{
+            expandedRowRender: invoice =>
+              invoice.payments?.length ? (
+                <div>
+                  {invoice.payments.map(payment => (
+                    <div key={payment.payment_id} style={{ marginBottom: 4 }}>
+                      Pago {formatGuatemalaDate(payment.payment_date)}:{' '}
+                      {formatAmount(payment.payment_amount)}
+                      {payment.reference ? ` (${payment.reference})` : ''}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span style={{ color: 'rgba(0,0,0,0.45)' }}>
+                  Sin pagos asociados a esta factura
+                </span>
+              ),
+          }}
+        />
+      )}
+    </div>
   )
 }
 
@@ -193,82 +370,188 @@ function ReportClientTable(props) {
 
   const columns = [
     {
-      title: 'Estado cuenta',
-      dataIndex: 'has_debt',
-      key: 'has_debt',
+      title: 'Estado',
+      dataIndex: 'account_status',
+      key: 'account_status',
       width: 120,
-      render: hasDebt =>
-        hasDebt ? (
-          <AntTag color='red'>Con deuda</AntTag>
-        ) : (
-          <AntTag color='green'>Al dia</AntTag>
-        ),
+      fixed: 'left',
+      render: status => {
+        const meta = accountStatusMeta[status] || accountStatusMeta.AL_DIA
+        return <AntTag color={meta.color}>{meta.label}</AntTag>
+      },
     },
     {
-      title: 'Codigo cliente',
-      dataIndex: 'id',
-      key: 'id',
-      width: 120,
-      render: text => <span>{text}</span>,
-    },
-    {
-      title: 'Nombre o Razon social',
+      title: 'Cliente',
       dataIndex: 'name',
       key: 'name',
+      width: 220,
+      fixed: 'left',
       sorter: (a, b) => sortColumnString(a, b, 'name'),
       sortOrder:
         sortedInfo && sortedInfo.columnKey === 'name' && sortedInfo.order,
       ellipsis: true,
-      render: text => <span>{text}</span>,
-    },
-    {
-      title: 'Fecha',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 120,
-      render: text => <span>{formatGuatemalaDate(text)}</span>,
+      render: (text, record) => (
+        <span>
+          <div>{text}</div>
+          <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>
+            Cod. {record.id}
+            {record.nit ? ` | NIT ${record.nit}` : ''}
+          </div>
+        </span>
+      ),
     },
     {
       title: 'Tipo',
       dataIndex: 'stakeholder_type',
       key: 'stakeholder_type',
-      width: 140,
+      width: 130,
       render: text => <Tag type='stakeholderTypes' value={text} />,
     },
     {
-      title: 'Cargos',
-      dataIndex: 'total_credit',
-      key: 'total_credit',
-      width: 120,
-      render: text => <span>{formatAmount(text)}</span>,
-    },
-    {
-      title: 'Pagado',
-      dataIndex: 'paid_credit',
-      key: 'paid_credit',
-      width: 120,
-      render: text => <span>{formatAmount(text)}</span>,
-    },
-    {
-      title: 'Balance',
-      key: 'credit_balance',
-      width: 120,
-      render: (_, record) => (
+      title: 'Saldo pendiente',
+      dataIndex: 'balance',
+      key: 'balance',
+      width: 140,
+      render: (text, record) => (
         <span
           style={{
-            fontWeight: isOverdueDebt120(record) ? 600 : 400,
-            color: isOverdueDebt120(record) ? '#cf1322' : 'inherit',
+            fontWeight: 600,
+            color: record.has_overdue ? '#cf1322' : 'inherit',
           }}
         >
-          {formatAmount(record.credit_balance)}
+          {formatAmount(text)}
         </span>
       ),
     },
+    {
+      title: 'Total pagado',
+      dataIndex: 'total_paid',
+      key: 'total_paid',
+      width: 120,
+      render: text => formatAmount(text),
+    },
+    {
+      title: 'Dias atraso',
+      dataIndex: 'max_days_overdue',
+      key: 'max_days_overdue',
+      width: 110,
+      render: (days, record) => {
+        if (!record.has_debt) return <span style={{ color: '#52c41a' }}>0</span>
+        const value = Number(days) || 0
+        if (value <= 0) return <span>Por vencer</span>
+        return (
+          <span
+            style={{
+              fontWeight: 600,
+              color: value > 90 ? '#cf1322' : '#d46b08',
+            }}
+          >
+            {value}
+          </span>
+        )
+      },
+    },
+    {
+      title: 'Ultimo movimiento',
+      dataIndex: 'last_movement_date',
+      key: 'last_movement_date',
+      width: 140,
+      render: text => (text ? formatGuatemalaDate(text) : '-'),
+    },
+    {
+      title: 'Ultimo pago',
+      dataIndex: 'last_payment_date',
+      key: 'last_payment_date',
+      width: 160,
+      render: (text, record) =>
+        text ? (
+          <span>
+            <div>{formatGuatemalaDate(text)}</div>
+            {record.last_payment_document ? (
+              <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>
+                Factura {record.last_payment_document}
+              </div>
+            ) : null}
+          </span>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      title: 'Prox. vencimiento',
+      dataIndex: 'next_due_date',
+      key: 'next_due_date',
+      width: 130,
+      render: text => (text ? formatGuatemalaDate(text) : '-'),
+    },
+    {
+      title: agingColumnTitle(
+        '0-30',
+        'Saldo pendiente con hasta 30 dias desde el vencimiento (incluye facturas aun no vencidas).'
+      ),
+      dataIndex: 'aging_0_30',
+      key: 'aging_0_30',
+      width: 110,
+      render: text => formatAmount(text),
+    },
+    {
+      title: agingColumnTitle(
+        '31-60',
+        'Saldo pendiente con 31 a 60 dias de atraso desde la fecha de vencimiento.'
+      ),
+      dataIndex: 'aging_31_60',
+      key: 'aging_31_60',
+      width: 110,
+      render: text => formatAmount(text),
+    },
+    {
+      title: agingColumnTitle(
+        '61-90',
+        'Saldo pendiente con 61 a 90 dias de atraso desde la fecha de vencimiento.'
+      ),
+      dataIndex: 'aging_61_90',
+      key: 'aging_61_90',
+      width: 110,
+      render: text => formatAmount(text),
+    },
+    {
+      title: agingColumnTitle(
+        '+90',
+        'Saldo pendiente con mas de 90 dias de atraso desde la fecha de vencimiento.'
+      ),
+      dataIndex: 'aging_over_90',
+      key: 'aging_over_90',
+      width: 110,
+      render: text => (
+        <span
+          style={{
+            fontWeight: Number(text) > 0 ? 600 : 400,
+            color: Number(text) > 0 ? '#cf1322' : 'inherit',
+          }}
+        >
+          {formatAmount(text)}
+        </span>
+      ),
+    },
+    {
+      title: '',
+      key: 'actions',
+      width: 150,
+      render: (_, record) => (
+        <Button
+          type='link'
+          size='small'
+          icon={<FileTextOutlined />}
+          onClick={e => {
+            e.stopPropagation()
+            props.onOpenStatement(record)
+          }}
+        >
+          Ver detalle
+        </Button>
+      ),
+    },
   ]
-
-  const handleChange = (pagination, filters, sorter) => {
-    setSortedInfo(sorter)
-  }
 
   return (
     <div style={pageLayoutStyle}>
@@ -277,52 +560,45 @@ function ReportClientTable(props) {
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
-                title='Clientes con deuda'
-                primary={`${summary?.clients_with_debt || 0} clientes`}
-                secondary={`Facturado: ${formatAmount(
-                  summary?.total_debt_charge
-                )}`}
-                tertiary={`Pagado: ${formatAmount(
-                  summary?.total_debt_paid
-                )} | Saldo: ${formatAmount(summary?.total_debt_balance)}`}
+                title='Facturacion'
+                items={[
+                  {
+                    label: 'Total facturado',
+                    value: formatAmount(summary?.approved_invoices_amount),
+                    detail: `Cantidad de facturas aprobadas: ${
+                      summary?.approved_invoices_count || 0
+                    }`,
+                  },
+                  {
+                    label: 'Total anulado',
+                    value: formatAmount(summary?.cancelled_invoices_amount),
+                    detail: `Cantidad de facturas anuladas: ${
+                      summary?.cancelled_invoices_count || 0
+                    }`,
+                  },
+                ]}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
-                title='Clientes sin deuda'
+                title='Ya pagado'
                 primary={`${summary?.clients_without_debt || 0} clientes`}
-                secondary={`Facturado: ${formatAmount(
-                  summary?.total_without_debt_charge
-                )}`}
-                tertiary={`Pagado: ${formatAmount(
-                  summary?.total_without_debt_paid
-                )}`}
+                secondary={`Total pagado: ${formatAmount(summary?.total_paid)}`}
+                tertiary={`Facturas pagadas: ${
+                  summary?.total_paid_invoices || 0
+                }`}
               />
             </Col>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
-                title='Total cargos'
-                primary={formatAmount(summary?.total_credit)}
-                secondary={`${
-                  summary?.total_clients || 0
-                } clientes en el reporte`}
-              />
-            </Col>
-            <Col {...summaryCardCol} style={cardColStyle}>
-              <SummaryCard
-                title='Total pagado'
-                primary={formatAmount(summary?.total_paid_credit)}
-                secondary={`Con deuda: ${formatAmount(
-                  summary?.total_debt_paid
-                )} + Sin deuda: ${formatAmount(
-                  summary?.total_without_debt_paid
+                title='Pendiente de pago'
+                primary={`${summary?.clients_with_debt || 0} clientes`}
+                secondary={`Por cobrar: ${formatAmount(
+                  summary?.total_debt_balance
                 )}`}
-              />
-            </Col>
-            <Col {...summaryCardCol} style={cardColStyle}>
-              <SummaryCard
-                title='Balance total'
-                primary={formatAmount(summary?.total_credit_balance)}
+                tertiary={`Facturas pendientes: ${
+                  summary?.total_unpaid_invoices || 0
+                }`}
               />
             </Col>
           </Row>
@@ -331,30 +607,18 @@ function ReportClientTable(props) {
 
       <div style={staticSectionStyle}>
         <Row gutter={16} style={{ marginTop: 15 }}>
-          <Col xs={24} sm={12} md={5} lg={5}>
-            <RangePicker
-              key={`created-at-${props.filtersResetKey}`}
-              allowClear
-              style={{ width: '100%', height: '40px', borderRadius: '8px' }}
-              placeholder={['Fecha inicio', 'Fecha fin']}
-              format='DD-MM-YYYY'
-              value={props.filters?.created_at}
-              onChange={props.handleFiltersChange('created_at')}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={5} lg={5}>
+          <Col xs={24} sm={12} md={6} lg={6}>
             <Search
               key={`name-search-${props.filtersResetKey}`}
               size={'large'}
-              type='tel'
               prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
-              placeholder={'Buscar por nombre'}
+              placeholder={'Buscar cliente'}
               className={'cabisa-table-search customSearch'}
               style={{ width: '100%', height: '40px' }}
               onSearch={props.handleFiltersChange('name')}
             />
           </Col>
-          <Col xs={24} sm={12} md={4} lg={4}>
+          <Col xs={24} sm={12} md={5} lg={5}>
             <Select
               key={`stakeholder-type-${props.filtersResetKey}`}
               className={'single-select'}
@@ -375,10 +639,10 @@ function ReportClientTable(props) {
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={4} lg={4}>
+          <Col xs={24} sm={12} md={5} lg={5}>
             <Select
               className={'single-select'}
-              placeholder={'Estado de cuenta'}
+              placeholder={'Estado'}
               size={'large'}
               style={{ width: '100%', height: '40px' }}
               value={props.filters?.debt_status ?? ''}
@@ -387,13 +651,7 @@ function ReportClientTable(props) {
             >
               {debtStatusOptions.map(option => (
                 <Option key={option.value || 'all'} value={option.value}>
-                  {option.value === '' ? (
-                    <AntTag color='gray'>{option.label}</AntTag>
-                  ) : option.value === 'WITHOUT_DEBT' ? (
-                    <AntTag color='green'>{option.label}</AntTag>
-                  ) : (
-                    <AntTag color='red'>{option.label}</AntTag>
-                  )}
+                  {option.label}
                 </Option>
               ))}
             </Select>
@@ -428,38 +686,22 @@ function ReportClientTable(props) {
         >
           <div ref={tableWrapperRef} style={tableWrapperStyle}>
             <Table
-              scroll={{ y: tableScrollY }}
+              scroll={{ x: 1800, y: tableScrollY }}
               className={'CustomTableClass'}
               dataSource={props.dataSource}
               columns={columns}
               pagination={false}
               loading={props.loading}
               rowKey='id'
-              rowClassName={getClientAccountRowClassName}
-              onChange={handleChange}
+              onChange={(_pagination, _filters, sorter) =>
+                setSortedInfo(sorter)
+              }
               expandable={{
                 expandedRowRender: record => (
-                  <div className={'text-left'}>
-                    <p>
-                      <b>Direccion: </b>{' '}
-                      {record.address !== null ? record.address : ''}{' '}
-                    </p>
-                    <p>
-                      <b>Email: </b> {record.email !== null ? record.email : ''}{' '}
-                    </p>
-                    <p>
-                      <b>Telefono: </b>{' '}
-                      {record.phone ? formatPhone(record.phone) : ''}{' '}
-                    </p>
-                    <p>
-                      <b>Encargado compras: </b>{' '}
-                      {record.business_man ? record.business_man : ''}{' '}
-                    </p>
-                    <p>
-                      <b>Encargado pagos: </b>{' '}
-                      {record.payments_man ? record.payments_man : ''}{' '}
-                    </p>
-                  </div>
+                  <UnpaidInvoicesExpand
+                    record={record}
+                    formatAmount={formatAmount}
+                  />
                 ),
                 expandIcon: ({ expanded, onExpand, record }) =>
                   expanded ? (

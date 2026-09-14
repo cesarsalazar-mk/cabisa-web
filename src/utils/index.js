@@ -243,9 +243,19 @@ export const parseGuatemalaDate = value => {
 export const formatFactDate = (value, format = 'DD-MM-YYYY') => {
   if (!value) return ''
 
+  // ONLY for documents.fact_date (Guatemala wall-clock in DB).
+  // Do not use for created_at, payment_date, credit_due_date, start_date, etc.
+  const normalized = String(value)
+    .trim()
+    .replace('T', ' ')
+    .replace(/\.\d+/, '')
+    .replace(/Z$/i, '')
+    .replace(/[+-]\d{2}:\d{2}$/, '')
+    .trim()
+
   const parsed = moment(
-    value,
-    ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm:ss.SSS', moment.ISO_8601],
+    normalized,
+    ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm', 'YYYY-MM-DD'],
     true
   )
 

@@ -42,7 +42,7 @@ function Payments() {
       id: '',
       name: '',
       nit: '',
-      created_at: null,
+      fact_date: null,
       paymentMethods: '',
       totalInvoice: '',
       creditStatus: '',
@@ -90,7 +90,7 @@ function Payments() {
     ...(filters.id ? { id: { $like: `%25${filters.id}%25` } } : {}),
     ...(filters.name ? { name: { $like: `%25${filters.name}%25` } } : {}),
     ...(filters.nit ? { nit: { $like: `%25${filters.nit}%25` } } : {}),
-    ...getSingleDateFilter(filters.created_at),
+    ...getSingleDateFilter(filters.fact_date),
     ...(filters.paymentMethods ? { payment_method: filters.paymentMethods } : {}),
     ...(filters.totalInvoice
       ? { total_amount: { $like: `%25${filters.totalInvoice}%25` } }
@@ -140,7 +140,7 @@ function Payments() {
 
   const setSearchFilters = field => value => {
     const nextValue =
-      field === 'created_at'
+      field === 'fact_date'
         ? value || null
         : value === undefined || value === null
         ? ''
@@ -150,7 +150,7 @@ function Payments() {
   }
 
   const clearFilters = () => {
-    setFilters({ ...initFilters.current, created_at: null })
+    setFilters({ ...initFilters.current, fact_date: null })
     setPagination(prevState => ({ ...prevState, current: 1 }))
     setFiltersResetKey(prevState => prevState + 1)
   }
