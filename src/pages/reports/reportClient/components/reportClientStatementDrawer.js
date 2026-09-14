@@ -32,10 +32,12 @@ const VIEW_UNPAID = 'UNPAID'
 const VIEW_PAID = 'PAID'
 const VIEW_HISTORY = 'HISTORY'
 
-const isInvoiceFactDateMovement = movementType => movementType === 'INVOICE'
+const isInvoiceFactDateMovement = movementType =>
+  movementType === 'INVOICE' || movementType === 'MANUAL_INVOICE'
 
 const movementTypeLabels = {
   INVOICE: 'Factura',
+  MANUAL_INVOICE: 'Factura manual',
   PAYMENT: 'Pago',
   CREDIT_NOTE: 'Nota credito',
   DEBIT_NOTE: 'Nota debito',
@@ -325,10 +327,15 @@ function ReportClientStatementDrawer({ visible, client, onClose }) {
 
   const invoiceColumns = [
     {
-      title: 'Factura',
+      title: 'Factura / NS',
       dataIndex: 'document_number',
       key: 'document_number',
-      width: 120,
+      width: 140,
+      render: (text, row) =>
+        text ||
+        (row.related_internal_document_id
+          ? String(row.related_internal_document_id)
+          : 'Factura del sistema'),
     },
     {
       title: 'Fecha',
@@ -410,10 +417,10 @@ function ReportClientStatementDrawer({ visible, client, onClose }) {
       render: type => movementTypeLabels[type] || type,
     },
     {
-      title: 'Documento',
+      title: 'Documento / NS',
       dataIndex: 'document_number',
       key: 'document_number',
-      width: 130,
+      width: 140,
     },
     {
       title: 'Referencia',
@@ -487,7 +494,7 @@ function ReportClientStatementDrawer({ visible, client, onClose }) {
                 prefix={
                   <SearchOutlined className={'cabisa-table-search-icon'} />
                 }
-                placeholder='# Documento'
+                placeholder='# Documento / NS'
                 className={'cabisa-table-search customSearch'}
                 value={documentNumberInput}
                 onChange={event => setDocumentNumberInput(event.target.value)}

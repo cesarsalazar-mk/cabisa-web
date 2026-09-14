@@ -198,10 +198,15 @@ function UnpaidInvoicesExpand({ record, formatAmount }) {
 
   const columns = [
     {
-      title: 'Factura',
+      title: 'Factura / NS',
       dataIndex: 'document_number',
       key: 'document_number',
-      width: 130,
+      width: 140,
+      render: (text, row) =>
+        text ||
+        (row.related_internal_document_id
+          ? String(row.related_internal_document_id)
+          : 'Factura del sistema'),
     },
     {
       title: 'Fecha',
@@ -594,7 +599,7 @@ function ReportClientTable(props) {
                 title='Pendiente de pago'
                 primary={`${summary?.clients_with_debt || 0} clientes`}
                 secondary={`Por cobrar: ${formatAmount(
-                  summary?.total_debt_balance
+                  summary?.total_balance
                 )}`}
                 tertiary={`Facturas pendientes: ${
                   summary?.total_unpaid_invoices || 0
