@@ -11,6 +11,9 @@ import ServiceNoteBill from '../pages/sales/components/serviceNote/ServiceNoteBi
 import Clients from '../pages/clients/clientsIndex'
 import ClientView from '../pages/clients/clientView'
 
+//Sellers
+import Sellers from '../pages/sellers/sellersIndex'
+
 //Suppliers
 import Suppliers from '../pages/suppliers/suppliersIndex'
 import SupplierView from '../pages/suppliers/supplierView'
@@ -113,6 +116,15 @@ const menu_routes = [
     routeGroup: [
       /^(\/suppliers)|(\/suppliers\/)|(\/supplierView)|(\/supplierView\/)|(\/supplierView\/[a-zA-z0-9]*)/i,
     ],
+  },
+  {
+    id: 6,
+    name: 'Vendedores',
+    key: 'sellers',
+    icon: 'clients',
+    route: '/sellers',
+    profilePermissions: [53],
+    routeGroup: [/^(\/sellers)|(\/sellers\/)/i],
   },
   {
     id: 9,
@@ -241,6 +253,11 @@ const menu_sub_routes = [
     id: 8,
     route: '/supplierView',
     component: SupplierView,
+  },
+  {
+    id: 6,
+    route: '/sellers',
+    component: Sellers,
   },
   {
     id: 9,
