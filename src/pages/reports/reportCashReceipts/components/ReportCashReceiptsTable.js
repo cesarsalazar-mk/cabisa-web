@@ -21,6 +21,7 @@ import {
   canViewRestrictedReportCards,
   formatFactDate,
 } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import ActionOptions from '../../../../components/actionOptions'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 
@@ -299,6 +300,7 @@ function ReportCashReceiptsTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -334,6 +336,7 @@ function ReportCashReceiptsTable(props) {
               <DetailSummaryRow title='Sistema' data={summary?.system} />
             </Panel>
           </Collapse>
+          </CollapsibleCards>
         </div>
       )}
 

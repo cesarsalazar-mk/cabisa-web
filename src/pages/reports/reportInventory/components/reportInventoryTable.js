@@ -17,6 +17,7 @@ import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
 import { permissions } from '../../../../commons/types'
 import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import ReportInventoryDetailDrawer from './reportInventoryDetailDrawer'
 
 const { Search } = Input
@@ -240,6 +241,7 @@ function ReportInventoryTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -254,6 +256,7 @@ function ReportInventoryTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 

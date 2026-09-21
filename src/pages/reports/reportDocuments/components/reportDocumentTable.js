@@ -15,6 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import { numberFormat, canViewRestrictedReportCards, formatFactDate } from '../../../../utils'
 
 const { Search } = Input
@@ -245,6 +246,7 @@ function ReportDocumentTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -277,6 +279,7 @@ function ReportDocumentTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 

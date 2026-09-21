@@ -9,6 +9,7 @@ import {
 } from 'antd'
 import Tag from '../../../../components/Tag'
 import { formatFactDate } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
 import { numberFormat } from '../../../../utils'
 import ReportSalesFilters from './reportSalesFilters'
@@ -220,6 +221,7 @@ function ReportSalesTable(props) {
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
+        <CollapsibleCards>
         <Row gutter={[16, 16]} align='stretch'>
           <Col {...summaryCardCol} style={cardColStyle}>
             <SummaryCard
@@ -234,6 +236,7 @@ function ReportSalesTable(props) {
             />
           </Col>
         </Row>
+        </CollapsibleCards>
 
         <ReportSalesFilters
           loading={props.loading}

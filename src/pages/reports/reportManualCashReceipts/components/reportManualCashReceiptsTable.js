@@ -15,6 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import { numberFormat, canViewRestrictedReportCards, formatGuatemalaDate } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 
 const { Search } = Input
 const { Option } = Select
@@ -232,6 +233,7 @@ function ReportManualCashReceiptsTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -258,6 +260,7 @@ function ReportManualCashReceiptsTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 
