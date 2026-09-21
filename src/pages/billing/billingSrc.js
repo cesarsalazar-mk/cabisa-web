@@ -6,6 +6,7 @@ const urlProduct = stage.productUrl
 const urlInvoice = stage.invoiceUrl
 const urlInvoiceFel = stage.invoiceFelUrl
 const urlStakeholder = stage.stakeholderUrl
+const urlSeller = stage.sellerUrl
 
 const getInvoices = params => api.get(urlInvoice, { ...params })
 const getPaymentMethods = () => api.get(`${urlInvoice}/payment-methods`)
@@ -16,6 +17,8 @@ const createInvoiceDraft = data => api.post(`${urlInvoice}/draft`, data)
 const certifyInvoiceDraft = documentId =>
   api.post(`${urlInvoice}/${documentId}/certify`, {})
 const updateInvoice = data => api.put(urlInvoice, data)
+const updateInvoiceSeller = data => api.put(`${urlInvoice}/seller`, data)
+const getSellers = params => api.get(urlSeller, params)
 const cancelInvoice = data => api.put(`${urlInvoice}/cancel`, data)
 //fel
 //const createInvoiceFel = data => api.post(`${urlInvoiceFel}/create`, data)
@@ -47,6 +50,8 @@ const InventorySrc = {
   createInvoiceDraft,
   certifyInvoiceDraft,
   updateInvoice,
+  updateInvoiceSeller,
+  getSellers,
   cancelInvoice,
   getProductsOptions,
   getProjectsOptions,

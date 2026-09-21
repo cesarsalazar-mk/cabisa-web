@@ -108,7 +108,17 @@ const submenu_sections = [
         <h1>Ventas de productos</h1>
       </>
     ),
-  }  
+  },
+  {
+    name: 'Comisiones',
+    key: 'reportCommissions',
+    route: '/reportCommissions',
+    component: (
+      <>
+        <h1>Comisiones</h1>
+      </>
+    ),
+  },
 ]
 
 const submenu_sections_inventory = [

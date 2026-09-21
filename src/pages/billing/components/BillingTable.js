@@ -19,6 +19,7 @@ import {
   FileSearchOutlined,
   PrinterOutlined,
   SyncOutlined,
+  UserOutlined,
 } from '@ant-design/icons'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
@@ -187,6 +188,13 @@ function BillingTable(props) {
       render: text => <Tag type='documentsPaymentMethods' value={text} />,
     },
     {
+      width: 160,
+      title: 'Vendedor',
+      dataIndex: 'seller_name',
+      key: 'seller_name',
+      render: text => <span>{text}</span>,
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
@@ -197,8 +205,27 @@ function BillingTable(props) {
       title: '',
       dataIndex: 'id',
       key: 'id',
-      width: 175,
-      render: (_, data) => {
+      width: 225,
+      render: (_, data) => (
+        <>
+          {data.status !== 'CANCELLED' && (
+            <>
+              <Tooltip title={'Asignar vendedor'}>
+                <Button
+                  icon={<UserOutlined />}
+                  onClick={() => props.handlerEditSeller(data)}
+                />
+              </Tooltip>
+              <Divider type={'vertical'} />
+            </>
+          )}
+          {renderActions(data)}
+        </>
+      ),
+    },
+  ]
+
+  const renderActions = data => {
         if (data.status === 'SAT_FAILED') {
           return (
             <Tooltip title={'Reintentar certificacion'}>
@@ -248,9 +275,7 @@ function BillingTable(props) {
             )}
           </>
         )
-      },
-    },
-  ]
+  }
 
   return (
     <div style={pageLayoutStyle}>

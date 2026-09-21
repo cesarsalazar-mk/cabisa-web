@@ -1,14 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Button, Card, Col, Input, InputNumber, message, Modal, Pagination, Row, Table } from 'antd'
+import { Button, Card, Col, Divider, Input, InputNumber, message, Modal, Pagination, Popconfirm, Row, Switch, Table, Tag, Tooltip } from 'antd'
+import { DeleteOutlined, FileSearchOutlined, UndoOutlined } from '@ant-design/icons'
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import HeaderPage from '../../components/HeaderPage'
-import ActionOptions from '../../components/actionOptions'
 import SellersSrc from './sellersSrc'
-import { permissions } from '../../commons/types'
-import { formatPhone, formatPhoneOnChange, showErrors, validateEmail } from '../../utils'
+import ReportsSrc from '../reports/reportsSrc'
+import { actions, permissions } from '../../commons/types'
+import { formatPhone, formatPhoneOnChange, numberFormat, showErrors, validatePermissions, validateEmail } from '../../utils'
 
 const { Search } = Input
+const { getFormattedValue } = numberFormat()
+
+const formatAmount = amount => `Q ${getFormattedValue(Number(amount || 0).toFixed(2))}`
 
 const DEFAULT_COMMISSION = 5
 const emptySeller = { name: '', email: '', phone: '', commission_percentage: DEFAULT_COMMISSION }
@@ -21,11 +25,13 @@ function Sellers() {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 })
   const [seller, setSeller] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [showInactive, setShowInactive] = useState(false)
 
   const loadData = useCallback(() => {
     setLoading(true)
 
     SellersSrc.getSellers({
+      ...(showInactive ? { include_inactive: '1' } : {}),
       ...(searchText
         ? {
             open_parenthesis: 'name',
@@ -43,7 +49,7 @@ function Sellers() {
       })
       .catch(() => message.error('No se pudo obtener la informacion.'))
       .finally(() => setLoading(false))
-  }, [searchText, pagination.current, pagination.pageSize])
+  }, [searchText, showInactive, pagination.current, pagination.pageSize])
 
   useEffect(() => {
     loadData()
@@ -78,7 +84,7 @@ function Sellers() {
   const onDelete = data => {
     setLoading(true)
 
-    SellersSrc.deleteSeller(data.id)
+    return SellersSrc.deleteSeller(data.id)
       .then(() => {
         message.success('Elemento eliminado.')
         loadData()
@@ -89,8 +95,59 @@ function Sellers() {
       })
   }
 
+  const onReactivate = data => {
+    setLoading(true)
+
+    SellersSrc.reactivateSeller(data.id)
+      .then(() => {
+        message.success('Vendedor reactivado.')
+        loadData()
+      })
+      .catch(showErrors)
+      .finally(() => setLoading(false))
+  }
+
+  // Antes de eliminar, consulta las comisiones pendientes del vendedor en el reporte de comisiones
+  const confirmDelete = async data => {
+    let summary = null
+
+    try {
+      summary = (await ReportsSrc.getCommissions({ seller_id: data.id, $limit: 1 })).summary
+    } catch (_) {}
+
+    const toPay = summary?.to_pay
+    const unpaid = summary?.unpaid
+
+    Modal.confirm({
+      title: `¿Eliminar a ${data.name}?`,
+      content: (
+        <div>
+          {!summary && <p>No se pudo verificar si tiene comisiones pendientes.</p>}
+          {toPay?.invoices_count > 0 && (
+            <p>
+              <b>Comision por pagar:</b> {toPay.invoices_count} factura(s) cobradas, {formatAmount(toPay.commission_amount)}.
+            </p>
+          )}
+          {unpaid?.invoices_count > 0 && (
+            <p>
+              <b>Facturas aun no cobradas:</b> {unpaid.invoices_count}, comision {formatAmount(unpaid.commission_amount)}.
+            </p>
+          )}
+          <p>
+            Dejara de aparecer para asignarlo a facturas, pero sus facturas y comisiones siguen en el reporte. Puedes reactivarlo con "Ver inactivos".
+          </p>
+        </div>
+      ),
+      okText: 'Eliminar',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk: () => onDelete(data),
+    })
+  }
+
   const clearFilters = () => {
     setSearchText('')
+    setShowInactive(false)
     setSearchKey(prev => prev + 1)
     setPagination(prev => ({ ...prev, current: 1 }))
   }
@@ -101,18 +158,42 @@ function Sellers() {
     { title: 'Telefono', dataIndex: 'phone', key: 'phone', render: text => formatPhone(text) },
     { title: 'Comision', dataIndex: 'commission_percentage', key: 'commission_percentage', render: v => `${Number(v)}%` },
     {
+      title: 'Estado',
+      dataIndex: 'is_active',
+      key: 'is_active',
+      render: isActive => (isActive ? <Tag color='green'>Activo</Tag> : <Tag color='red'>Inactivo</Tag>),
+    },
+    {
       title: '',
       key: 'actions',
-      render: (_, data) => (
-        <ActionOptions
-          editPermissions={false}
-          data={data}
-          permissionId={permissions.VENTAS}
-          showDeleteBtn
-          handlerDeleteRow={onDelete}
-          handlerEditRow={openEdit}
-        />
-      ),
+      render: (_, data) => {
+        const can = validatePermissions(permissions.VENTAS)
+
+        if (!data.is_active)
+          return (
+            can(actions.EDIT) && (
+              <Popconfirm title='¿Reactivar este vendedor?' okText='Si' cancelText='No' onConfirm={() => onReactivate(data)}>
+                <Button icon={<UndoOutlined />}>Reactivar</Button>
+              </Popconfirm>
+            )
+          )
+
+        return (
+          <div>
+            {can(actions.EDIT) && (
+              <Tooltip title='Editar'>
+                <Button icon={<FileSearchOutlined />} onClick={() => openEdit(data)} />
+              </Tooltip>
+            )}
+            {can(actions.EDIT) && can(actions.DELETE) && <Divider type={'vertical'} />}
+            {can(actions.DELETE) && (
+              <Tooltip title='Eliminar' color={'red'}>
+                <Button danger icon={<DeleteOutlined />} onClick={() => confirmDelete(data)} />
+              </Tooltip>
+            )}
+          </div>
+        )
+      },
     },
   ]
 
@@ -132,6 +213,18 @@ function Sellers() {
               setPagination(prev => ({ ...prev, current: 1 }))
             }}
           />
+        </Col>
+        <Col xs={24} sm={12} md={4} lg={4}>
+          <div style={{ height: 40, display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+            <Switch
+              checked={showInactive}
+              onChange={value => {
+                setShowInactive(value)
+                setPagination(prev => ({ ...prev, current: 1 }))
+              }}
+            />
+            <span style={{ marginLeft: 8 }}>Ver inactivos</span>
+          </div>
         </Col>
         <Col xs={24} sm={12} md={3} lg={3}>
           <Button type='default' className='cabisa-clear-filters-button' style={{ width: '100%', height: '40px' }} onClick={clearFilters} icon={<CloseSquareOutlined />}>
