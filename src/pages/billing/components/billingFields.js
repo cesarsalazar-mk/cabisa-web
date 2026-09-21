@@ -23,6 +23,7 @@ import {
 } from '../../../utils'
 import billingSrc from '../billingSrc'
 import FooterButtons from '../../../components/FooterButtons'
+import SellerSelect from './SellerSelect'
 import {
   appConfig,
   // documentsServiceType,
@@ -361,6 +362,7 @@ export const billingLogicFactory = ({
       },
       document_id: data.id,
       stakeholder_id: data.stakeholder_id,
+      seller_id: data.seller_id,
       project_id: data.project_id,
       created_at: data.created_at,
       start_date: data.start_date,
@@ -1071,6 +1073,17 @@ function BillingFields({
                 </Option>
               )}
             </Select>
+          </Col>
+        </Row>
+
+        <Row gutter={16} className={'section-space-field'}>
+          <Col xs={8} sm={8} md={8} lg={8}>
+            <div className={'title-space-field'}>Vendedor</div>
+            <SellerSelect
+              value={data.seller_id}
+              onChange={handleChange('seller_id')}
+              disabled={props.edit}
+            />
           </Col>
         </Row>
 

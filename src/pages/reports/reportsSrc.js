@@ -40,6 +40,8 @@ const getManualCashReceipts = params => api.get(`${urlReport}/getCashManualRecei
 const exportReport = params => api.get(`${urlReport}/exportReport`, { ...params })
 
 const getServiceOrders = params => api.get(`${urlReport}/getServiceOrders`, { ...params })
+const markCommissionsPaid = data => api.put(`${urlReport}/commissions/paid`, data)
+const getCommissions = params => api.get(`${urlReport}/commissions`, params)
 const getSalesProductReport = params => api.get(`${urlReport}/getSalesProductReport`, { ...params })
 
 const ReportsSrc = {
@@ -57,6 +59,8 @@ const ReportsSrc = {
   getProductsCategories,
   getStakeholdersOptions,
   getSellersOptions,
+  getCommissions,
+  markCommissionsPaid,
   getDocumentReport,
   exportReport,
   getCashReceipts,

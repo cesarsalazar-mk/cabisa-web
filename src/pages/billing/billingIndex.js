@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState, useRef, useLayoutEffect } from
 import HeaderPage from '../../components/HeaderPage'
 import BillingTable from './components/BillingTable'
 import DetailBilling from './components/detailBilling'
+import InvoiceSellerDrawer from './components/invoiceSellerDrawer'
 import billingSrc from './billingSrc'
 import { message,Modal,Row,Col,Input,Spin } from 'antd'
 import { getPercent, showErrors, roundNumber, validateRole, getDateRangeFilter } from '../../utils'
@@ -174,6 +175,7 @@ function Billing(props) {
   const [cancelDescription,setCancelDescription] = useState('')
   const [dataCancelInvoice,setDataCancelInvoice] = useState(null)
   const [rowData,setRowData] = useState([])
+  const [sellerInvoice, setSellerInvoice] = useState(null)
   
 
   useEffect(() => {
@@ -332,7 +334,7 @@ function Billing(props) {
         if(infileMessage === 'SUCCESSFUL'){        
           billingSrc
             .cancelInvoice({ document_id: rowData.id })
-            .then(_ => {
+            .then(response => {
               if (JSON.stringify(filters) === JSON.stringify(initFilters.current)) {
                 loadData()
               } else {
@@ -340,6 +342,12 @@ function Billing(props) {
               }
   
               message.success('Factura anulada exitosamente')
+
+              if (response?.data?.commission_paid_amount !== undefined)
+                Modal.warning({
+                  title: 'La comision de esta factura ya estaba pagada al vendedor',
+                  content: `Se le pago Q ${Number(response.data.commission_paid_amount).toFixed(2)}. Revisa el Reporte de Comisiones para compensarla o desmarcarla.`,
+                })
             })
             .catch(error => showErrors(error))
             .finally(() => setLoading(false))
@@ -486,12 +494,21 @@ function Billing(props) {
           handlerShowDocument={handlerShowDocument}
           handlerPrintDocument={handlerPrintDocument}
           handlerRetryCertification={handlerRetryCertification}
+          handlerEditSeller={setSellerInvoice}
           loading={loading}
           isAdmin={isAdmin}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
         />
       </div>
+      <InvoiceSellerDrawer
+        invoice={sellerInvoice}
+        onClose={() => setSellerInvoice(null)}
+        onSaved={() => {
+          setSellerInvoice(null)
+          loadData()
+        }}
+      />
       <DetailBilling
         closable={closeDetail}
         visible={visible}
