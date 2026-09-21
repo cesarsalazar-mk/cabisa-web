@@ -20,6 +20,7 @@ import ActionOptions from '../../../../components/actionOptions'
 import Tag from '../../../../components/Tag'
 import { useSale, saleActions } from '../../../sales/context'
 import { showErrors, formatDateOnly } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 
 const { Search } = Input
 const { Option } = Select
@@ -261,6 +262,7 @@ function ReportServiceOrderTable(props) {
   return (
     <div style={pageLayoutStyle}>
       <div style={staticSectionStyle}>
+        <CollapsibleCards>
         <Row gutter={[16, 16]} align='stretch'>
           <Col {...summaryCardCol} style={cardColStyle}>
             <SummaryCard
@@ -287,6 +289,7 @@ function ReportServiceOrderTable(props) {
             />
           </Col>
         </Row>
+        </CollapsibleCards>
 
         <Row gutter={16} className={'margin-top-15'}>
           <Col xs={24} sm={12} md={5} lg={5}>

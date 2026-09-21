@@ -5,6 +5,7 @@ import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined
 import DownloadOutlined from '@ant-design/icons/lib/icons/DownloadOutlined'
 import HeaderPage from '../../../components/HeaderPage'
 import SellerSelect from '../../billing/components/SellerSelect'
+import CollapsibleCards from '../../../components/CollapsibleCards'
 import ReportsSrc from '../reportsSrc'
 import { appConfig, stakeholdersStatus, stakeholdersTypes } from '../../../commons/types'
 import { formatFactDate, getDateRangeFilter, numberFormat, showErrors } from '../../../utils'
@@ -218,6 +219,7 @@ function ReportCommissions() {
     <div>
       <HeaderPage title={'Reporte - Comisiones'} />
 
+      <CollapsibleCards>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <SummaryCard title='Comision por pagar al vendedor (factura pagada)' totals={summary.to_pay} color='#389e0d' />
@@ -232,6 +234,7 @@ function ReportCommissions() {
           <SummaryCard title='Comision pendiente (factura no pagada)' totals={summary.unpaid} color='#d46b08' />
         </Col>
       </Row>
+      </CollapsibleCards>
 
       <Row gutter={16} className={'margin-top-15'}>
         <Col xs={24} sm={12} lg={4}>

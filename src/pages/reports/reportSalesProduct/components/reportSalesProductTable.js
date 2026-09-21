@@ -13,6 +13,7 @@ import {
 import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import Tag from '../../../../components/Tag'
 import { numberFormat, canViewRestrictedReportCards } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import { reportSalesItemTypes, salesCategoryOptions } from '../../../../commons/types'
 
 const { Search } = Input
@@ -264,6 +265,7 @@ function ReportSalesProductTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -311,6 +313,7 @@ function ReportSalesProductTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 

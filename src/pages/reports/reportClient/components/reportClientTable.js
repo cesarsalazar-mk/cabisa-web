@@ -28,6 +28,7 @@ import {
   formatGuatemalaDate,
   showErrors,
 } from '../../../../utils'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 
 const { Search } = Input
 const { Option } = Select
@@ -562,6 +563,7 @@ function ReportClientTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -607,6 +609,7 @@ function ReportClientTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 

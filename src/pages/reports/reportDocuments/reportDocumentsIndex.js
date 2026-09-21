@@ -47,7 +47,7 @@ function ReportDocuments() {
       name: '',
       fact_date: null,
       paymentMethods: '',
-      totalInvoice: '',
+      paymentStatus: '',
     }
   }
 
@@ -82,7 +82,7 @@ function ReportDocuments() {
       endKey: 'updated_to',
     }),
     payment_method: filters.paymentMethods,
-    total_amount: getLikeFilter(filters.totalInvoice),
+    payment_status: filters.paymentStatus,
     ...(withPagination
       ? {
           $limit: pageSize,

@@ -15,6 +15,7 @@ import SearchOutlined from '@ant-design/icons/lib/icons/SearchOutlined'
 import CloseSquareOutlined from '@ant-design/icons/lib/icons/CloseSquareOutlined'
 import Tag from '../../../../components/Tag'
 import DocumentTotalCell from '../../../../components/DocumentTotalCell'
+import CollapsibleCards from '../../../../components/CollapsibleCards'
 import { numberFormat, canViewRestrictedReportCards, formatFactDate } from '../../../../utils'
 
 const { Search } = Input
@@ -223,6 +224,20 @@ function ReportDocumentTable(props) {
       width: 100,
       render: text => <Tag type='documentStatus' value={text} />,
     },
+    {
+      title: 'Estado de pago',
+      dataIndex: 'payment_status',
+      key: 'payment_status',
+      width: 150,
+      render: text =>
+        text === 'PAID' ? (
+          <AntTag color='green'>Pagada</AntTag>
+        ) : text === 'UNPAID' ? (
+          <AntTag color='orange'>Pendiente de pago</AntTag>
+        ) : (
+          '-'
+        ),
+    },
   ]
 
   const { summary } = props
@@ -231,6 +246,7 @@ function ReportDocumentTable(props) {
     <div style={pageLayoutStyle}>
       {canViewRestrictedReportCards() && (
         <div style={staticSectionStyle}>
+          <CollapsibleCards>
           <Row gutter={[16, 16]} align='stretch'>
             <Col {...summaryCardCol} style={cardColStyle}>
               <SummaryCard
@@ -263,6 +279,7 @@ function ReportDocumentTable(props) {
               />
             </Col>
           </Row>
+          </CollapsibleCards>
         </div>
       )}
 
@@ -350,15 +367,26 @@ function ReportDocumentTable(props) {
             </Select>
           </Col>
           <Col xs={24} sm={12} md={5} lg={5}>
-            <Search
-              key={`total-invoice-${props.filtersResetKey}`}
-              type='tel'
-              prefix={<SearchOutlined className={'cabisa-table-search-icon'} />}
-              placeholder='Total'
-              className={'cabisa-table-search customSearch'}
-              onSearch={props.handleFiltersChange('totalInvoice')}
+            <Select
+              key={`payment-status-${props.filtersResetKey}`}
+              className={'single-select'}
+              placeholder={'Estado de pago'}
               size={'large'}
-            />
+              style={{ width: '100%', height: '40px' }}
+              getPopupContainer={trigger => trigger.parentNode}
+              onChange={props.handleFiltersChange('paymentStatus')}
+              value={props.filters?.paymentStatus ?? ''}
+            >
+              <Option value={''}>
+                <AntTag color='gray'>Todo</AntTag>
+              </Option>
+              <Option value={'PAID'}>
+                <AntTag color='green'>Pagada</AntTag>
+              </Option>
+              <Option value={'UNPAID'}>
+                <AntTag color='orange'>Pendiente de pago</AntTag>
+              </Option>
+            </Select>
           </Col>
         </Row>
       </div>
