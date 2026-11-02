@@ -61,6 +61,7 @@ const config = {
     se: { color: 'blue', text: 'SE - Equipo' },
     sf: { color: 'cyan', text: 'SF - Fosa' },
     so: { color: 'gray', text: 'SO - Otros' },
+    st: { color: 'gold', text: 'ST - Trailer' },
   },
   roles: {
     ADMIN: { color: '#187fce', text: 'Administrador' },
