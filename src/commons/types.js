@@ -62,6 +62,7 @@ export const salesCategories = {
   SE: 'se',
   SF: 'sf',
   SO: 'so',
+  ST: 'st',
 }
 
 export const salesCategoryOptions = [
@@ -69,6 +70,7 @@ export const salesCategoryOptions = [
   { value: 'se', label: 'Equipo' },
   { value: 'sf', label: 'Fosa' },
   { value: 'so', label: 'Otros' },
+  { value: 'st', label: 'Trailer' },
 ]
 
 // also apply to serviceStatus
